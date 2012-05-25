@@ -1,7 +1,7 @@
 /*
  * UniCore32 virtual CPU header
  *
- * Copyright (C) 2010-2011 GUAN Xue-tao
+ * Copyright (C) 2010-2012 Guan Xuetao
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -89,8 +89,10 @@ typedef struct CPUUniCore32State {
 #define ASR_NZCV                (ASR_N | ASR_Z | ASR_C | ASR_V)
 #define ASR_RESERVED            (~(ASR_M | ASR_I | ASR_NZCV))
 
-#define UC32_EXCP_PRIV          (ASR_MODE_PRIV)
-#define UC32_EXCP_TRAP          (ASR_MODE_TRAP)
+#define UC32_EXCP_PRIV          (1)
+#define UC32_EXCP_ITRAP         (2)
+#define UC32_EXCP_DTRAP         (3)
+#define UC32_EXCP_INTR          (4)
 
 /* Return the current ASR value.  */
 target_ulong cpu_asr_read(CPUUniCore32State *env1);
