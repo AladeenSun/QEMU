@@ -330,6 +330,9 @@ test speed: all
 TAGS:
 	find "$(SRC_PATH)" -name '*.[hc]' -print0 | xargs -0 etags
 
+tags:
+	find "$(SRC_PATH)" -name '*.[hc]' -print0 | xargs -0 ctags
+
 cscope:
 	rm -f ./cscope.*
 	find "$(SRC_PATH)" -name "*.[chsS]" -print | sed 's,^\./,,' > ./cscope.files
