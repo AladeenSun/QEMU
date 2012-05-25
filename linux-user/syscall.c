@@ -307,7 +307,8 @@ static int sys_uname(struct new_utsname *buf)
   memset(buf, 0, sizeof(*buf));
   COPY_UTSNAME_FIELD(buf->sysname, uts_buf.sysname);
   COPY_UTSNAME_FIELD(buf->nodename, uts_buf.nodename);
-  COPY_UTSNAME_FIELD(buf->release, uts_buf.release);
+//  COPY_UTSNAME_FIELD(buf->release, uts_buf.release);
+  COPY_UTSNAME_FIELD(buf->release, "2.6.37.4-167.fc11.i686.PAE");
   COPY_UTSNAME_FIELD(buf->version, uts_buf.version);
   COPY_UTSNAME_FIELD(buf->machine, uts_buf.machine);
 #ifdef _GNU_SOURCE
