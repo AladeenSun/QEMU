@@ -901,6 +901,9 @@ case "$cpu" in
     unicore32*)
            host_guest_base="yes"
            ;;
+    unicore64*)
+           host_guest_base="yes"
+           ;;
 esac
 
 [ -z "$guest_base" ] && guest_base="$host_guest_base"
@@ -962,6 +965,7 @@ sparc-linux-user \
 sparc64-linux-user \
 sparc32plus-linux-user \
 unicore32-linux-user \
+unicore64-linux-user \
 s390x-linux-user \
 "
 fi
@@ -3737,6 +3741,9 @@ case "$target_arch2" in
   ;;
   unicore32)
     target_phys_bits=32
+  ;;
+  unicore64)
+    target_phys_bits=64
   ;;
   xtensa|xtensaeb)
     TARGET_ARCH=xtensa

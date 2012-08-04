@@ -479,6 +479,34 @@ static void elf_core_copy_regs(target_elf_gregset_t *regs, const CPUUniCore32Sta
 
 #endif
 
+#ifdef TARGET_UNICORE64
+
+#define ELF_START_MMAP          0ULL
+
+#define elf_check_arch(x)       ((x) == EM_UNICORE64)
+
+#define ELF_CLASS               ELFCLASS64
+#define ELF_ARCH                EM_UNICORE64
+
+static inline void init_thread(struct target_pt_regs *regs,
+        struct image_info *infop)
+{
+    /* UNICORE64 TODO */
+    abort();
+}
+
+#define ELF_NREG    36
+typedef target_elf_greg_t  target_elf_gregset_t[ELF_NREG];
+
+/* UNICORE64 FIXME:
+static void elf_core_copy_regs(target_elf_gregset_t *regs,
+        const CPUUniCore64State *env)
+{
+    abort();
+}
+*/
+#endif
+
 #ifdef TARGET_SPARC
 #ifdef TARGET_SPARC64
 

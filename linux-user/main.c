@@ -996,6 +996,13 @@ error:
 }
 #endif
 
+#ifdef TARGET_UNICORE64
+void cpu_loop(CPUUniCore64State *env)
+{
+    abort();
+}
+#endif
+
 #ifdef TARGET_SPARC
 #define SPARC64_STACK_BIAS 2047
 
@@ -3461,6 +3468,8 @@ int main(int argc, char **argv, char **envp)
         cpu_model = "any";
 #elif defined(TARGET_UNICORE32)
         cpu_model = "any";
+#elif defined(TARGET_UNICORE64)
+        cpu_model = "any";
 #elif defined(TARGET_M68K)
         cpu_model = "any";
 #elif defined(TARGET_SPARC)
@@ -3780,6 +3789,13 @@ int main(int argc, char **argv, char **envp)
         cpu_asr_write(env, regs->uregs[32], 0xffffffff);
         for (i = 0; i < 32; i++) {
             env->regs[i] = regs->uregs[i];
+        }
+    }
+#elif defined(TARGET_UNICORE64)
+    {
+        int i;
+        for (i = 0; i < 32; i++) {
+            env->regs[i] = regs->uc64_regs[i];
         }
     }
 #elif defined(TARGET_SPARC)

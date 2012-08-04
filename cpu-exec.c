@@ -220,6 +220,7 @@ int cpu_exec(CPUArchState *env)
 #elif defined(TARGET_ALPHA)
 #elif defined(TARGET_ARM)
 #elif defined(TARGET_UNICORE32)
+#elif defined(TARGET_UNICORE64)
 #elif defined(TARGET_PPC)
     env->reserve_addr = -1;
 #elif defined(TARGET_LM32)
@@ -280,7 +281,8 @@ int cpu_exec(CPUArchState *env)
                     }
 #if defined(TARGET_ARM) || defined(TARGET_SPARC) || defined(TARGET_MIPS) || \
     defined(TARGET_PPC) || defined(TARGET_ALPHA) || defined(TARGET_CRIS) || \
-    defined(TARGET_MICROBLAZE) || defined(TARGET_LM32) || defined(TARGET_UNICORE32)
+    defined(TARGET_MICROBLAZE) || defined(TARGET_LM32) || \
+    defined(TARGET_UNICORE32) || defined(TARGET_UNICORE64)
                     if (interrupt_request & CPU_INTERRUPT_HALT) {
                         env->interrupt_request &= ~CPU_INTERRUPT_HALT;
                         env->halted = 1;
@@ -448,6 +450,12 @@ int cpu_exec(CPUArchState *env)
                     if (interrupt_request & CPU_INTERRUPT_HARD
                         && !(env->uncached_asr & ASR_I)) {
                         env->exception_index = UC32_EXCP_INTR;
+                        do_interrupt(env);
+                        next_tb = 0;
+                    }
+#elif defined(TARGET_UNICORE64)
+                    if (interrupt_request & CPU_INTERRUPT_HARD
+                        && !(env->uncached_asr & ASR_INTR_SELECT)) {
                         do_interrupt(env);
                         next_tb = 0;
                     }
@@ -649,6 +657,7 @@ int cpu_exec(CPUArchState *env)
 #elif defined(TARGET_ARM)
     /* XXX: Save/restore host fpu exception state?.  */
 #elif defined(TARGET_UNICORE32)
+#elif defined(TARGET_UNICORE64)
 #elif defined(TARGET_SPARC)
 #elif defined(TARGET_PPC)
 #elif defined(TARGET_LM32)
