@@ -939,6 +939,7 @@ s390x-softmmu \
 xtensa-softmmu \
 xtensaeb-softmmu \
 unicore32-softmmu \
+unicore64-softmmu \
 "
 fi
 # the following are Linux specific

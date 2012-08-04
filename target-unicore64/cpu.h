@@ -21,6 +21,8 @@
 
 #define CPUArchState                    struct CPUUniCore64State
 
+#define NB_MMU_MODES                     2
+
 #include "config.h"
 #include "qemu-common.h"
 #include "cpu-defs.h"
@@ -80,14 +82,9 @@ void switch_mode(CPUUniCore64State *, int);
 #define CPU_SAVE_VERSION       2
 
 /* MMU modes definitions */
-#define NB_MMU_MODES           2
 #define MMU_MODE0_SUFFIX       _kernel
 #define MMU_MODE1_SUFFIX       _user
 #define MMU_USER_IDX           1
-
-#include "cpu-all.h"
-#include "cpu-qom.h"
-#include "exec-all.h"
 
 static inline int cpu_mmu_index(CPUUniCore64State *env)
 {
@@ -106,6 +103,10 @@ static inline void cpu_set_tls(CPUUniCore64State *env, target_ulong newtls)
 {
     abort();
 }
+
+#include "cpu-all.h"
+#include "cpu-qom.h"
+#include "exec-all.h"
 
 static inline void cpu_pc_from_tb(CPUUniCore64State *env, TranslationBlock *tb)
 {

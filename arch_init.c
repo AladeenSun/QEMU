@@ -93,6 +93,8 @@ int graphic_depth = 15;
 #define QEMU_ARCH QEMU_ARCH_XTENSA
 #elif defined(TARGET_UNICORE32)
 #define QEMU_ARCH QEMU_ARCH_UNICORE32
+#elif defined(TARGET_UNICORE64)
+#define QEMU_ARCH QEMU_ARCH_UNICORE64
 #endif
 
 const uint32_t arch_type = QEMU_ARCH;
