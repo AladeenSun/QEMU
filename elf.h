@@ -109,7 +109,7 @@ typedef int64_t  Elf64_Sxword;
 #define EM_OPENRISC     92        /* OpenCores OpenRISC */
 
 #define EM_UNICORE32    110     /* UniCore32 */
-#define EM_UNICORE64    110     /* UniCore64, FIXME lator */
+#define EM_UNICORE64    200     /* UniCore64, FIXME lator */
 
 /*
  * This is an interim value that we will use until the committee comes
