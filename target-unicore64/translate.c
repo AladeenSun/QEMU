@@ -62,6 +62,21 @@ typedef struct DisasContext {
     struct TranslationBlock *dc_tb;
 } DisasContext;
 
+static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
+{
+    TranslationBlock *tb;
+
+    tb = s->dc_tb;
+    if ((tb->pc & TARGET_PAGE_MASK) == (dest & TARGET_PAGE_MASK)) {
+        tcg_gen_goto_tb(n);
+        tcg_gen_movi_i64(cpu_R[31], dest);
+        tcg_gen_exit_tb((tcg_target_long)tb + n);
+    } else {
+        tcg_gen_movi_i64(cpu_R[31], dest);
+        tcg_gen_exit_tb(0);
+    }
+}
+
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
 }
@@ -194,7 +209,13 @@ done_disas_loop:
          *  - Hardware watchpoints.
          * Hardware breakpoints have already been handled and skip this code.
          */
-        UNHANDLED_FLOW;
+        switch (dc->dc_jmp) {
+        case DISAS_NEXT:
+            gen_goto_tb(dc, 1, dc->dc_pc);
+            break;
+        default:
+            UNHANDLED_FLOW;
+        }
     }
 
     gen_icount_end(tb, num_insns);
