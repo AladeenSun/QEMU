@@ -221,8 +221,16 @@ void gen_intermediate_code_pc(CPUUniCore64State *env, TranslationBlock *tb)
 void cpu_dump_state(CPUUniCore64State *env, FILE *f,
         fprintf_function cpu_fprintf, int flags)
 {
-    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
-    abort();
+    int i;
+
+    for (i = 0; i < 32; i++) {
+        cpu_fprintf(f, "R%02d=%16llx", i, env->regs[i]);
+        if ((i % 4) == 3) {
+            cpu_fprintf(f, "\n");
+        } else {
+            cpu_fprintf(f, " ");
+        }
+    }
 }
 
 void restore_state_to_opc(CPUUniCore64State *env, TranslationBlock *tb,
