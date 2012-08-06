@@ -491,9 +491,8 @@ static void elf_core_copy_regs(target_elf_gregset_t *regs, const CPUUniCore32Sta
 static inline void init_thread(struct target_pt_regs *regs,
         struct image_info *infop)
 {
-    /* UNICORE64 TODO */
-    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
-    abort();
+    regs->UC64_R31 = infop->entry;
+    regs->UC64_R29 = infop->start_stack;
 }
 
 #define ELF_NREG    36
