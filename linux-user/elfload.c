@@ -495,7 +495,7 @@ static inline void init_thread(struct target_pt_regs *regs,
     regs->UC64_R29 = infop->start_stack;
 }
 
-#define ELF_NREG    36
+#define ELF_NREG                UC64_REGS_NUM
 typedef target_elf_greg_t  target_elf_gregset_t[ELF_NREG];
 
 /* UNICORE64 FIXME:

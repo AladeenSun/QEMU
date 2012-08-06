@@ -999,7 +999,25 @@ error:
 #ifdef TARGET_UNICORE64
 void cpu_loop(CPUUniCore64State *env)
 {
-    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
+    int trapnr;
+
+    for (;;) {
+        cpu_exec_start(env);
+        trapnr = uc64_cpu_exec(env);
+        cpu_exec_end(env);
+        switch (trapnr) {
+        case EXCP_INTERRUPT:
+            goto error; /* FIXME */
+            break;
+        default:
+            goto error;
+        }
+        process_pending_signals(env);
+    }
+
+error:
+    fprintf(stderr, "qemu: unhandled CPU exception 0x%x - aborting\n", trapnr);
+    cpu_dump_state(env, stderr, fprintf, 0);
     abort();
 }
 #endif
@@ -3795,7 +3813,7 @@ int main(int argc, char **argv, char **envp)
 #elif defined(TARGET_UNICORE64)
     {
         int i;
-        for (i = 0; i < 32; i++) {
+        for (i = 0; i < UC64_REGS_NUM; i++) {
             env->regs[i] = regs->uc64_regs[i];
         }
     }

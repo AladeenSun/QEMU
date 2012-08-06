@@ -4,8 +4,10 @@
 #ifndef QEMU_UC64_SYSCALL_H
 #define QEMU_UC64_SYSCALL_H
 
+#define UC64_REGS_NUM           36
+
 struct target_pt_regs {
-    abi_ulong uc64_regs[36];
+    abi_ulong uc64_regs[UC64_REGS_NUM];
 };
 
 #define UC64_R00                uc64_regs[0]
