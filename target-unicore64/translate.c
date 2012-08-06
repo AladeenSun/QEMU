@@ -60,6 +60,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 
     gen_icount_start();
     gen_icount_end(tb, num_insns);
+    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
     abort();
 }
 
@@ -76,6 +77,7 @@ void gen_intermediate_code_pc(CPUUniCore64State *env, TranslationBlock *tb)
 void cpu_dump_state(CPUUniCore64State *env, FILE *f,
         fprintf_function cpu_fprintf, int flags)
 {
+    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
     abort();
 }
 

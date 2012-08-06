@@ -492,6 +492,7 @@ static inline void init_thread(struct target_pt_regs *regs,
         struct image_info *infop)
 {
     /* UNICORE64 TODO */
+    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
     abort();
 }
 

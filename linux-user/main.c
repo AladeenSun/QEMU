@@ -999,6 +999,7 @@ error:
 #ifdef TARGET_UNICORE64
 void cpu_loop(CPUUniCore64State *env)
 {
+    printf("%s not supported yet, in file %s line %d\n", __func__, __FILE__, __LINE__);
     abort();
 }
 #endif
