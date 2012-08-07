@@ -64,6 +64,7 @@ void uc64_translate_init(void)
 #define UCOP_OPCODE             (((insn) >> 24) & 0x0f)
 #define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
 #define UCOP_LSB_6              (((insn) >>  0) & 0x3f)
+#define UCOP_CPNUM              (((insn) >> 21) & 0xf)
 
 #define UCOP_SET(i)             ((insn) & (1 << (i)))
 
@@ -155,7 +156,29 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    TCGv_i64 tmp;
+
+    switch (UCOP_CPNUM) {
+    case 1: /* fake ocd */
+        /* movc p1.cn, rs1, #0 */
+        if ((insn & 0xfe0007ff) == 0xc0000000) {
+            if (UCOP_REG_D) { /* cn == 0 */
+                ILLEGAL_INSN;
+            }
+            if (UCOP_REG_S1 == 31) {
+                ILLEGAL_INSN;
+            }
+            tmp = tcg_temp_new_i64();
+            tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_S1]);
+            gen_helper_cp1_putc(tmp);
+            tcg_temp_free(tmp);
+        } else {
+            ILLEGAL_INSN;
+        }
+        break;
+    default:
+        ILLEGAL_INSN;
+    }
 }
 
 static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
