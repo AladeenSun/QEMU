@@ -91,13 +91,25 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
     }
 }
 
+static void do_shift(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    ILLEGAL_INSN;
+}
+
+static void do_clzclo(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    ILLEGAL_INSN;
+}
+
+static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    ILLEGAL_INSN;
+}
+
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 tmp2;
 
-    if (UCOP_SET(28)) { /* ONLY handle data-reg, data-imm */
-        ILLEGAL_INSN;
-    }
     if (UCOP_SET(23)) { /* S bit */
         ILLEGAL_INSN;
     }
@@ -202,7 +214,23 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
      */
     switch (insn >> 29) {
     case 0x0:
-        do_datap(env, s, insn);
+        if (UCOP_SET(28)) {
+            switch ((insn >> 26) & 0x3) {
+            case 0x0:
+                do_shift(env, s, insn);
+                break;
+            case 0x1:
+                ILLEGAL_INSN;
+            case 0x2:
+                do_clzclo(env, s, insn);
+                break;
+            case 0x3:
+                do_condmove(env, s, insn);
+                break;
+            }
+        } else {
+            do_datap(env, s, insn);
+        }
         break;
     case 0x1:
         do_srfr(env, s, insn);
