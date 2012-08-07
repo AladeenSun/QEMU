@@ -183,17 +183,21 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
          * Also stop translation when a page boundary is reached.  This
          * ensures prefetch aborts occur at the right place.  */
         num_insns++;
-        if (num_insns >= max_insns)
+        if (num_insns >= max_insns) {
             goto done_disas_loop;
+        }
 
-        if (singlestep || env->singlestep_enabled)
+        if (singlestep || env->singlestep_enabled) {
             goto done_disas_loop;
+        }
 
-        if (gen_opc_ptr >= gen_opc_buf + OPC_MAX_SIZE)
+        if (gen_opc_ptr >= gen_opc_buf + OPC_MAX_SIZE) {
             goto done_disas_loop;
+        }
 
-        if (dc->dc_pc >= (pc_start & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE)
+        if (dc->dc_pc >= (pc_start & TARGET_PAGE_MASK) + TARGET_PAGE_SIZE) {
             goto done_disas_loop;
+        }
 
     } while (dc->dc_jmp != DISAS_NEXT);
 
