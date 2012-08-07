@@ -58,6 +58,15 @@ void uc64_translate_init(void)
                         "Unhandled control flow at line %d in %s!",       \
                         __LINE__, __FILE__)
 
+#define UCOP_REG_D              (((insn) >> 16) & 0x1f)
+#define UCOP_REG_S1             (((insn) >> 11) & 0x1f)
+#define UCOP_REG_S2             (((insn) >>  6) & 0x1f)
+#define UCOP_OPCODE             (((insn) >> 24) & 0x0f)
+#define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
+#define UCOP_LSB_6              (((insn) >>  0) & 0x3f)
+
+#define UCOP_SET(i)             ((insn) & (1 << (i)))
+
 /* internal defines */
 typedef struct DisasContext {
     int dc_jmp;
@@ -83,7 +92,45 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    TCGv_i64 tmp2;
+
+    if (UCOP_SET(28)) { /* ONLY handle data-reg, data-imm */
+        ILLEGAL_INSN;
+    }
+    if (UCOP_SET(23)) { /* S bit */
+        ILLEGAL_INSN;
+    }
+    if (!UCOP_SET(22)) { /* Double bit */
+        ILLEGAL_INSN;
+    }
+    if (UCOP_REG_D == 31) {
+        ILLEGAL_INSN;
+    }
+
+    tmp2 = tcg_temp_new_i64();
+    if (UCOP_SET(21)) { /* reg or imm */
+        tcg_gen_movi_i64(tmp2, UCOP_IMM11);
+    } else {
+        if (UCOP_REG_S2 == 31) {
+            ILLEGAL_INSN;
+        }
+        if (UCOP_LSB_6) {
+            ILLEGAL_INSN;
+        }
+        tcg_gen_mov_i64(tmp2, cpu_R[UCOP_REG_S2]);
+    }
+
+    switch (UCOP_OPCODE) {
+    case 0x0d: /* mov */
+        if (UCOP_REG_S1) {
+            ILLEGAL_INSN;
+        }
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp2);
+        tcg_temp_free(tmp2);
+        break;
+    default:
+        ILLEGAL_INSN;
+    }
 }
 
 static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
