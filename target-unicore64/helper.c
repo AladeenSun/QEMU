@@ -38,7 +38,13 @@ CPUUniCore64State *uc64_cpu_init(const char *cpu_model)
 
 void helper_cp1_putc(target_ulong x)
 {
-    printf("%c", (unsigned char)x);        /* Output to stdout */
+    printf("%c", (unsigned char)x); /* Output to stdout */
+    fflush(NULL);
+}
+
+void helper_cp1_putx(target_ulong x)
+{
+    printf("--%16" PRIx64 "--", x); /* Output to stdout */
     fflush(NULL);
 }
 

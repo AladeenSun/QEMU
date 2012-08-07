@@ -9,5 +9,6 @@
 #include "def-helper.h"
 
 DEF_HELPER_1(cp1_putc, void, i64)
+DEF_HELPER_1(cp1_putx, void, i64)
 
 #include "def-helper.h"
