@@ -50,9 +50,11 @@ void uc64_translate_init(void)
 #include "helper.h"
 }
 
-#define ILLEGAL_INSN    cpu_abort(env,                                    \
-                        "Illegal UniCore64 instruction %08x at line %d!", \
-                        insn, __LINE__)
+#define ILLEGAL_INSN(cond)                                                   \
+        if (cond) {                                                          \
+            cpu_abort(env, "Illegal UniCore64 instruction %08x at line %d!", \
+                insn, __LINE__);                                             \
+        }
 
 #define UNHANDLED_FLOW  cpu_abort(env,                                    \
                         "Unhandled control flow at line %d in %s!",       \
@@ -93,77 +95,67 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 
 static void do_shift(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_clzclo(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 tmp2;
 
-    if (UCOP_SET(23)) { /* S bit */
-        ILLEGAL_INSN;
-    }
-    if (!UCOP_SET(22)) { /* Double bit */
-        ILLEGAL_INSN;
-    }
-    if (UCOP_REG_D == 31) {
-        ILLEGAL_INSN;
-    }
+    ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
+    ILLEGAL_INSN(!UCOP_SET(22)); /* Double bit */
+    ILLEGAL_INSN(UCOP_REG_D == 31);
 
     tmp2 = tcg_temp_new_i64();
     if (UCOP_SET(21)) { /* reg or imm */
         tcg_gen_movi_i64(tmp2, UCOP_IMM11);
     } else {
-        if (UCOP_REG_S2 == 31) {
-            ILLEGAL_INSN;
-        }
-        if (UCOP_LSB_6) {
-            ILLEGAL_INSN;
-        }
+        ILLEGAL_INSN(UCOP_REG_S2 == 31);
+        ILLEGAL_INSN(UCOP_LSB_6);
+
         tcg_gen_mov_i64(tmp2, cpu_R[UCOP_REG_S2]);
     }
 
     switch (UCOP_OPCODE) {
     case 0x0d: /* mov */
-        if (UCOP_REG_S1) {
-            ILLEGAL_INSN;
-        }
+        ILLEGAL_INSN(UCOP_REG_S1);
+
         tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp2);
         tcg_temp_free(tmp2);
         break;
     default:
-        ILLEGAL_INSN;
+        ILLEGAL_INSN(true);
     }
 }
 
 static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN;
+    ILLEGAL_INSN(true);
 }
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -173,12 +165,8 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     switch (UCOP_CPNUM) {
     case 1: /* fake ocd */
         /* ONLY handle movc p1.cd, rs1, #0 */
-        if ((insn & 0xfe0007ff) != 0xc0000000) {
-            ILLEGAL_INSN;
-        }
-        if (UCOP_REG_S1 == 31) {
-            ILLEGAL_INSN;
-        }
+        ILLEGAL_INSN((insn & 0xfe0007ff) != 0xc0000000);
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
 
         switch (UCOP_REG_D) { /* REG_D is cd */
         case 0: /* movc p1.c0, rs1, #0 */
@@ -194,11 +182,11 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             tcg_temp_free(tmp);
             break;
         default:
-            ILLEGAL_INSN;
+            ILLEGAL_INSN(true);
         }
         break;
     default:
-        ILLEGAL_INSN;
+        ILLEGAL_INSN(true);
     }
 }
 
@@ -220,7 +208,7 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
                 do_shift(env, s, insn);
                 break;
             case 0x1:
-                ILLEGAL_INSN;
+                ILLEGAL_INSN(true);
             case 0x2:
                 do_clzclo(env, s, insn);
                 break;
