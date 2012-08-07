@@ -56,9 +56,11 @@ void uc64_translate_init(void)
                 insn, __LINE__);                                             \
         }
 
-#define UNHANDLED_FLOW  cpu_abort(env,                                    \
-                        "Unhandled control flow at line %d in %s!",       \
-                        __LINE__, __FILE__)
+#define UNHANDLED_FLOW(cond)                                                 \
+        if (cond) {                                                          \
+            cpu_abort(env, "Unhandled control flow at line %d in %s!",       \
+                __LINE__, __FILE__);                                         \
+        }
 
 #define UCOP_REG_D              (((insn) >> 16) & 0x1f)
 #define UCOP_REG_S1             (((insn) >> 11) & 0x1f)
@@ -269,17 +271,9 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 
     gen_icount_start();
     do {
-        if (unlikely(!QTAILQ_EMPTY(&env->breakpoints))) {
-            UNHANDLED_FLOW;
-        }
-
-        if (search_pc) {
-            UNHANDLED_FLOW;
-        }
-
-        if (tb->cflags & CF_LAST_IO) {
-            UNHANDLED_FLOW;
-        }
+        UNHANDLED_FLOW(unlikely(!QTAILQ_EMPTY(&env->breakpoints)));
+        UNHANDLED_FLOW(search_pc);
+        UNHANDLED_FLOW(tb->cflags & CF_LAST_IO);
 
         disas_uc64_insn(env, dc);
 
@@ -308,7 +302,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 
 done_disas_loop:
     if (unlikely(env->singlestep_enabled)) {
-        UNHANDLED_FLOW;
+        UNHANDLED_FLOW(true);
     } else {
         /* While branches must always occur at the end of an IT block,
          * there are a few other things that can cause us to terminate
@@ -323,7 +317,7 @@ done_disas_loop:
             gen_goto_tb(dc, 1, dc->dc_pc);
             break;
         default:
-            UNHANDLED_FLOW;
+            UNHANDLED_FLOW(true);
         }
     }
 
@@ -331,7 +325,7 @@ done_disas_loop:
     *gen_opc_ptr = INDEX_op_end;
 
     if (search_pc) {
-        UNHANDLED_FLOW;
+        UNHANDLED_FLOW(true);
     } else {
         tb->size = dc->dc_pc - pc_start;
         tb->icount = num_insns;
