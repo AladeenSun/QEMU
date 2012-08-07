@@ -50,8 +50,12 @@ void uc64_translate_init(void)
 #include "helper.h"
 }
 
-#define UNHANDLED_FLOW  cpu_abort(env,                                  \
-                        "Unhandled control flow at line %d in %s!",     \
+#define ILLEGAL_INSN    cpu_abort(env,                                    \
+                        "Illegal UniCore64 instruction %08x at line %d!", \
+                        insn, __LINE__)
+
+#define UNHANDLED_FLOW  cpu_abort(env,                                    \
+                        "Unhandled control flow at line %d in %s!",       \
                         __LINE__, __FILE__)
 
 /* internal defines */
@@ -79,26 +83,32 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
+    ILLEGAL_INSN;
 }
 
 static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
