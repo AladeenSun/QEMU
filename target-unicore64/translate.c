@@ -233,6 +233,19 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_temp_free_i64(t_op1_64);
         tcg_temp_free_i64(t_op2_64);
         break;
+    case 0x04: /* insn ADD DADD */
+        if (UCOP_SET(22)) { /* insn DADD */
+            tcg_gen_add_i64(t_op1_64, t_op1_64, t_op2_64);
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+        } else { /* insn ADD */
+            tcg_gen_add_i32(t_op1_32, t_op1_32, t_op2_32);
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_temp_free_i32(t_op1_32);
+            tcg_temp_free_i32(t_op2_32);
+        }
+        tcg_temp_free_i64(t_op1_64);
+        tcg_temp_free_i64(t_op2_64);
+        break;
     case 0x0d: /* insn MOV DMOV */
         ILLEGAL_INSN(UCOP_REG_S1);
 
