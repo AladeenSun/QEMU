@@ -113,9 +113,9 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 t_op2_64;
+    TCGv_i32 t_op2_32;
 
     ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
-    ILLEGAL_INSN(!UCOP_SET(22)); /* Double bit */
     ILLEGAL_INSN(UCOP_REG_D == 31);
 
     t_op2_64 = tcg_temp_new_i64();
@@ -128,11 +128,21 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
     }
 
+    if (!UCOP_SET(22)) { /* If word, not Double word */
+        t_op2_32 = tcg_temp_new_i32();
+        tcg_gen_trunc_i64_i32(t_op2_32, t_op2_64);
+    }
+
     switch (UCOP_OPCODE) {
-    case 0x0d: /* mov */
+    case 0x0d: /* insn MOV DMOV */
         ILLEGAL_INSN(UCOP_REG_S1);
 
-        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
+        if (UCOP_SET(22)) { /* insn DMOV */
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
+        } else { /* insn MOV */
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
+            tcg_temp_free_i32(t_op2_32);
+        }
         tcg_temp_free_i64(t_op2_64);
         break;
     default:
