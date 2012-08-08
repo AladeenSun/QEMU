@@ -133,7 +133,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         ILLEGAL_INSN(UCOP_REG_S1);
 
         tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
-        tcg_temp_free(t_op2_64);
+        tcg_temp_free_i64(t_op2_64);
         break;
     default:
         ILLEGAL_INSN(true);
