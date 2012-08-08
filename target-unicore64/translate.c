@@ -395,18 +395,16 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     target_ulong t_addr;
 
-    switch (insn >> 24) {
-    case 0xbe: /* insn CALL */
+    ILLEGAL_INSN(!(UCOP_OPCODE == 0xe));
+
+    if (UCOP_SET(28)) { /* link */
         /* r30 <- next_insn */
         tcg_gen_movi_i64(cpu_R[30], s->dc_pc);
-
-        /* r31 <- current_insn + (signed_offset * 4) */
-        t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
-        gen_goto_tb(s, 0, t_addr);
-        break;
-    default:
-        ILLEGAL_INSN(true);
     }
+
+    /* r31 <- current_insn + (signed_offset * 4) */
+    t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
+    gen_goto_tb(s, 0, t_addr);
 }
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -439,6 +437,11 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     default:
         ILLEGAL_INSN(true);
     }
+}
+
+static void do_exception(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    ILLEGAL_INSN(true);
 }
 
 static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
@@ -489,7 +492,7 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
         do_coproc(env, s, insn);
         break;
     case 0x7:
-        do_branch(env, s, insn);
+        do_exception(env, s, insn);
         /* All conditions are handled, so default is not necessary */
     }
 }
