@@ -80,7 +80,116 @@ typedef struct DisasContext {
     int dc_singlestep;
     target_ulong dc_pc;
     struct TranslationBlock *dc_tb;
+    int condjmp;
+    int condlabel; /* Label for next instruction */
 } DisasContext;
+
+#define gen_load_cpu_field(tmp_64, name)               \
+    tcg_gen_ld_i64(tmp_64, cpu_env, offsetof(CPUUniCore64State, name))
+
+static void gen_test_cond(int notcond, int label)
+{
+    TCGv_i64 t_f1_64, t_f2_64;
+    int t_label;
+
+    t_f1_64 = tcg_temp_new_i64();
+
+    switch (notcond ^ 1) {
+    case 0x0: /* eq: Z */
+        gen_load_cpu_field(t_f1_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        break;
+    case 0x1: /* ne: !Z */
+        gen_load_cpu_field(t_f1_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
+        break;
+    case 0x2: /* cs: C */
+        gen_load_cpu_field(t_f1_64, CF);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
+        break;
+    case 0x3: /* cc: !C */
+        gen_load_cpu_field(t_f1_64, CF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        break;
+    case 0x4: /* mi: N */
+        gen_load_cpu_field(t_f1_64, NF);
+        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        break;
+    case 0x5: /* pl: !N */
+        gen_load_cpu_field(t_f1_64, NF);
+        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        break;
+    case 0x6: /* vs: V */
+        gen_load_cpu_field(t_f1_64, VF);
+        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        break;
+    case 0x7: /* vc: !V */
+        gen_load_cpu_field(t_f1_64, VF);
+        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        break;
+    case 0x8: /* hi: C && !Z */
+        t_f2_64 = tcg_temp_new_i64();
+        t_label = gen_new_label();
+        gen_load_cpu_field(t_f1_64, CF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, t_label);
+        gen_load_cpu_field(t_f2_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f2_64, 0, label);
+        gen_set_label(t_label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    case 0x9: /* ls: !C || Z */
+        t_f2_64 = tcg_temp_new_i64();
+        gen_load_cpu_field(t_f1_64, CF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        gen_load_cpu_field(t_f2_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f2_64, 0, label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    case 0xa: /* ge: N == V -> N ^ V == 0 */
+        t_f2_64 = tcg_temp_new_i64();
+        gen_load_cpu_field(t_f1_64, VF);
+        gen_load_cpu_field(t_f2_64, NF);
+        tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
+        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    case 0xb: /* lt: N != V -> N ^ V != 0 */
+        t_f2_64 = tcg_temp_new_i64();
+        gen_load_cpu_field(t_f1_64, VF);
+        gen_load_cpu_field(t_f2_64, NF);
+        tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
+        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    case 0xc: /* gt: !Z && N == V */
+        t_label = gen_new_label();
+        t_f2_64 = tcg_temp_new_i64();
+        gen_load_cpu_field(t_f1_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, t_label);
+        gen_load_cpu_field(t_f1_64, VF);
+        gen_load_cpu_field(t_f2_64, NF);
+        tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
+        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        gen_set_label(t_label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    case 0xd: /* le: Z || N != V */
+        t_f2_64 = tcg_temp_new_i64();
+        gen_load_cpu_field(t_f1_64, ZF);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        gen_load_cpu_field(t_f1_64, VF);
+        gen_load_cpu_field(t_f2_64, NF);
+        tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
+        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_temp_free_i64(t_f2_64);
+        break;
+    default:
+        fprintf(stderr, "Bad condition code 0x%x\n", notcond);
+        abort();
+    }
+
+    tcg_temp_free_i64(t_f1_64);
+}
 
 static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 {
@@ -395,7 +504,13 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     target_ulong t_addr;
 
-    ILLEGAL_INSN(!(UCOP_OPCODE == 0xe));
+    ILLEGAL_INSN(UCOP_OPCODE == 0xf);
+
+    if (UCOP_OPCODE != 0xe) { /* conditional jump */
+        s->condlabel = gen_new_label(); /* label for next instruction */
+        gen_test_cond(UCOP_OPCODE, s->condlabel);
+        s->condjmp = true;
+    }
 
     if (UCOP_SET(28)) { /* link */
         /* r30 <- next_insn */
@@ -405,6 +520,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     /* r31 <- current_insn + (signed_offset * 4) */
     t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
     gen_goto_tb(s, 0, t_addr);
+    s->dc_jmp = DISAS_TB_JUMP;
 }
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -529,6 +645,11 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 
         disas_uc64_insn(env, dc);
 
+        if (dc->condjmp && !dc->dc_jmp) { /* conditional instructions */
+            gen_set_label(dc->condlabel);
+            dc->condjmp = false;
+        }
+
         /* Translation stops when a conditional branch is encountered.
          * Otherwise the subsequent code could get translated several times.
          * Also stop translation when a page boundary is reached.  This
@@ -568,8 +689,17 @@ done_disas_loop:
         case DISAS_NEXT:
             gen_goto_tb(dc, 1, dc->dc_pc);
             break;
+        case DISAS_TB_JUMP:
+            /* nothing more to generate */
+            break;
         default:
             UNHANDLED_FLOW(true);
+        }
+
+        if (dc->condjmp) { /* branch instructions */
+            gen_set_label(dc->condlabel);
+            gen_goto_tb(dc, 1, dc->dc_pc);
+            dc->condjmp = false;
         }
     }
 

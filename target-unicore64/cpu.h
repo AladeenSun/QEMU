@@ -39,6 +39,12 @@ typedef struct CPUUniCore64State {
     uint64_t bsr;
     uint64_t bfr;
 
+    /* AFR cache for faster execution */
+    uint64_t VF; /* V is the bit 31. All other bits are undefined */
+    uint64_t CF; /* 0 or 1 */
+    uint64_t ZF; /* Z set if zero.  */
+    uint64_t NF; /* N is bit 31. All other bits are undefined.  */
+
     /* System control coprocessor (cp0) */
     struct {
         uint64_t c0_cpuid;
