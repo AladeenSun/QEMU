@@ -445,7 +445,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
             goto done_disas_loop;
         }
 
-    } while (dc->dc_jmp != DISAS_NEXT);
+    } while (dc->dc_jmp == DISAS_NEXT);
 
 done_disas_loop:
     if (unlikely(env->singlestep_enabled)) {
