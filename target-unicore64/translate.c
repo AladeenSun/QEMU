@@ -70,6 +70,7 @@ void uc64_translate_init(void)
 #define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
 #define UCOP_IMM_6              (((insn) >>  0) & 0x3f)
 #define UCOP_CPNUM              (((insn) >> 21) & 0xf)
+#define UCOP_LDST_BHD           (((insn) >> 22) & 0x7)
 
 #define UCOP_SET(i)             ((insn) & (1 << (i)))
 
@@ -286,7 +287,108 @@ static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN(true);
+    TCGv_i64 t_addr, t_op2_64, t_rd_64;
+
+    ILLEGAL_INSN((insn >> 29) != 3); /* ONLY 011 is handled */
+    ILLEGAL_INSN(!UCOP_LDST_BHD); /* prefetch or sync? */
+    ILLEGAL_INSN(UCOP_REG_D == 31);
+    ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
+    t_addr = tcg_temp_new_i64();
+    t_op2_64 = tcg_temp_new_i64();
+    t_rd_64 = tcg_temp_new_i64();
+
+    /* Prepare base address */
+    tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+
+    /* Prepare op2 */
+    if (UCOP_SET(21)) { /* reg or imm */
+        tcg_gen_movi_i64(t_op2_64, UCOP_IMM11);
+    } else {
+        ILLEGAL_INSN(UCOP_REG_S2 == 31);
+        ILLEGAL_INSN(UCOP_IMM_6);
+
+        tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+    }
+
+    if (UCOP_SET(27)) { /* pre */
+        if (UCOP_SET(28)) { /* add */
+            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
+        } else { /* sub */
+            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
+        }
+    }
+
+    if (UCOP_SET(25)) { /* load */
+        switch (UCOP_LDST_BHD) {
+        case 0:
+            ILLEGAL_INSN(true);
+            break;
+        case 1:
+            tcg_gen_qemu_ld64(t_rd_64, t_addr, 1);
+            break;
+        case 2:
+            tcg_gen_qemu_ld16u(t_rd_64, t_addr, 1);
+            break;
+        case 3:
+            tcg_gen_qemu_ld16s(t_rd_64, t_addr, 1);
+            break;
+        case 4:
+            tcg_gen_qemu_ld8u(t_rd_64, t_addr, 1);
+            break;
+        case 5:
+            tcg_gen_qemu_ld8s(t_rd_64, t_addr, 1);
+            break;
+        case 6:
+            tcg_gen_qemu_ld32u(t_rd_64, t_addr, 1);
+            break;
+        case 7:
+            tcg_gen_qemu_ld32s(t_rd_64, t_addr, 1);
+            break;
+        }
+    } else { /* store */
+        tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+
+        switch (UCOP_LDST_BHD) {
+        case 1:
+            tcg_gen_qemu_st64(t_rd_64, t_addr, 1);
+            break;
+        case 2:
+            tcg_gen_qemu_st16(t_rd_64, t_addr, 1);
+            break;
+        case 4:
+            tcg_gen_qemu_st8(t_rd_64, t_addr, 1);
+            break;
+        case 6:
+            tcg_gen_qemu_st32(t_rd_64, t_addr, 1);
+            break;
+        default:
+            ILLEGAL_INSN(true);
+            break;
+        }
+    }
+
+    if (!UCOP_SET(27)) { /* post */
+        ILLEGAL_INSN(!UCOP_SET(26)); /* post && !writeback is illegal */
+
+        if (UCOP_SET(28)) { /* add */
+            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
+        } else { /* sub */
+            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
+        }
+    }
+
+    if (!UCOP_SET(27) || UCOP_SET(26)) { /* post || writeback */
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_S1], t_addr);
+    }
+
+    if (UCOP_SET(25)) { /* Complete the load, in case rd==rs1 */
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
+    }
+
+    tcg_temp_free_i64(t_addr);
+    tcg_temp_free_i64(t_op2_64);
+    tcg_temp_free_i64(t_rd_64);
 }
 
 static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
