@@ -66,6 +66,7 @@ void uc64_translate_init(void)
 #define UCOP_REG_S1             (((insn) >> 11) & 0x1f)
 #define UCOP_REG_S2             (((insn) >>  6) & 0x1f)
 #define UCOP_OPCODE             (((insn) >> 24) & 0x0f)
+#define UCOP_SHIFT              (((insn) >> 24) & 0x03)
 #define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
 #define UCOP_LSB_6              (((insn) >>  0) & 0x3f)
 #define UCOP_CPNUM              (((insn) >> 21) & 0xf)
@@ -97,7 +98,78 @@ static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 
 static void do_shift(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN(true);
+    TCGv_i64 t_op1_64, t_op2_64;
+    TCGv_i32 t_op1_32, t_op2_32;
+
+    ILLEGAL_INSN(UCOP_SET(23));
+    ILLEGAL_INSN(UCOP_REG_D == 31);
+
+    /* Prepare op1 */
+    ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
+    t_op1_64 = tcg_temp_new_i64();
+    tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
+
+    /* Prepare op2 */
+    t_op2_64 = tcg_temp_new_i64();
+    if (UCOP_SET(21)) { /* reg or imm */
+        ILLEGAL_INSN(!UCOP_SET(22) && UCOP_SET(5)); /* bits_per_word = 32 */
+
+        tcg_gen_movi_i64(t_op2_64, UCOP_LSB_6);
+    } else {
+        ILLEGAL_INSN(UCOP_REG_S2 == 31);
+        ILLEGAL_INSN(UCOP_LSB_6);
+
+        tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+    }
+
+    if (!UCOP_SET(22)) { /* If word, not Double word */
+        t_op1_32 = tcg_temp_new_i32();
+        t_op2_32 = tcg_temp_new_i32();
+
+        tcg_gen_trunc_i64_i32(t_op1_32, t_op1_64);
+        tcg_gen_trunc_i64_i32(t_op2_32, t_op2_64);
+    }
+
+    switch (UCOP_SHIFT) {
+    case 0x00: /* insn DLSL LSL */
+        if (UCOP_SET(22)) { /* insn DLSL */
+            tcg_gen_shl_i64(t_op1_64, t_op1_64, t_op2_64);
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+        } else { /* insn LSL */
+            tcg_gen_shl_i32(t_op1_32, t_op1_32, t_op2_32);
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+        }
+        break;
+    case 0x01: /* insn DLSR LSR */
+        if (UCOP_SET(22)) { /* insn DLSR */
+            tcg_gen_shr_i64(t_op1_64, t_op1_64, t_op2_64);
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+        } else { /* insn LSR */
+            tcg_gen_shr_i32(t_op1_32, t_op1_32, t_op2_32);
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+        }
+        break;
+    case 0x02: /* insn DASR ASR */
+        if (UCOP_SET(22)) { /* insn DASR */
+            tcg_gen_sar_i64(t_op1_64, t_op1_64, t_op2_64);
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+        } else { /* insn ASR */
+            tcg_gen_sar_i32(t_op1_32, t_op1_32, t_op2_32);
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+        }
+        break;
+    case 0x03:
+        ILLEGAL_INSN(true);
+    }
+
+    /* Free temp var */
+    if (!UCOP_SET(22)) { /* If word, not Double word */
+        tcg_temp_free_i32(t_op1_32);
+        tcg_temp_free_i32(t_op2_32);
+    }
+    tcg_temp_free_i64(t_op1_64);
+    tcg_temp_free_i64(t_op2_64);
 }
 
 static void do_clzclo(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
