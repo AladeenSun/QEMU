@@ -112,28 +112,28 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    TCGv_i64 tmp2;
+    TCGv_i64 t_op2_64;
 
     ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
     ILLEGAL_INSN(!UCOP_SET(22)); /* Double bit */
     ILLEGAL_INSN(UCOP_REG_D == 31);
 
-    tmp2 = tcg_temp_new_i64();
+    t_op2_64 = tcg_temp_new_i64();
     if (UCOP_SET(21)) { /* reg or imm */
-        tcg_gen_movi_i64(tmp2, UCOP_IMM11);
+        tcg_gen_movi_i64(t_op2_64, UCOP_IMM11);
     } else {
         ILLEGAL_INSN(UCOP_REG_S2 == 31);
         ILLEGAL_INSN(UCOP_LSB_6);
 
-        tcg_gen_mov_i64(tmp2, cpu_R[UCOP_REG_S2]);
+        tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
     }
 
     switch (UCOP_OPCODE) {
     case 0x0d: /* mov */
         ILLEGAL_INSN(UCOP_REG_S1);
 
-        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp2);
-        tcg_temp_free(tmp2);
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
+        tcg_temp_free(t_op2_64);
         break;
     default:
         ILLEGAL_INSN(true);
