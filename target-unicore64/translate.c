@@ -68,7 +68,7 @@ void uc64_translate_init(void)
 #define UCOP_OPCODE             (((insn) >> 24) & 0x0f)
 #define UCOP_SHIFT              (((insn) >> 24) & 0x03)
 #define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
-#define UCOP_LSB_6              (((insn) >>  0) & 0x3f)
+#define UCOP_IMM_6              (((insn) >>  0) & 0x3f)
 #define UCOP_CPNUM              (((insn) >> 21) & 0xf)
 
 #define UCOP_SET(i)             ((insn) & (1 << (i)))
@@ -115,10 +115,10 @@ static void do_shift(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     if (UCOP_SET(21)) { /* reg or imm */
         ILLEGAL_INSN(!UCOP_SET(22) && UCOP_SET(5)); /* bits_per_word = 32 */
 
-        tcg_gen_movi_i64(t_op2_64, UCOP_LSB_6);
+        tcg_gen_movi_i64(t_op2_64, UCOP_IMM_6);
     } else {
         ILLEGAL_INSN(UCOP_REG_S2 == 31);
-        ILLEGAL_INSN(UCOP_LSB_6);
+        ILLEGAL_INSN(UCOP_IMM_6);
 
         tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
     }
@@ -209,7 +209,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_gen_movi_i64(t_op2_64, UCOP_IMM11);
     } else {
         ILLEGAL_INSN(UCOP_REG_S2 == 31);
-        ILLEGAL_INSN(UCOP_LSB_6);
+        ILLEGAL_INSN(UCOP_IMM_6);
 
         tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
     }
