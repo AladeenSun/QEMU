@@ -244,6 +244,18 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         }
         tcg_temp_free_i64(t_op2_64);
         break;
+    case 0x0f: /* insn NOT DNOT */
+        ILLEGAL_INSN(UCOP_REG_S1);
+
+        if (UCOP_SET(22)) { /* insn DNOT */
+            tcg_gen_not_i64(cpu_R[UCOP_REG_D], t_op2_64);
+        } else { /* insn NOT */
+            tcg_gen_not_i32(t_op2_32, t_op2_32);
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
+            tcg_temp_free_i32(t_op2_32);
+        }
+        tcg_temp_free_i64(t_op2_64);
+        break;
     default:
         ILLEGAL_INSN(true);
     }
