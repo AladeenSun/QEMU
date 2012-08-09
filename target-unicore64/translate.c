@@ -769,6 +769,9 @@ void cpu_dump_state(CPUUniCore64State *env, FILE *f,
             cpu_fprintf(f, " ");
         }
     }
+    cpu_fprintf(f, " NF=%16" PRIx64 "  ZF=%16" PRIx64
+            "  CF=%16" PRIx64 "  VF=%16" PRIx64 "\n",
+            env->NF, env->ZF, env->CF, env->VF);
 }
 
 void restore_state_to_opc(CPUUniCore64State *env, TranslationBlock *tb,
