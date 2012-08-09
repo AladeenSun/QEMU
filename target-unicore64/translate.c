@@ -337,11 +337,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn and */
             tcg_gen_and_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x01: /* insn xor dxor */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -351,11 +347,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn xor */
             tcg_gen_xor_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x02: /* insn sub dsub */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -365,11 +357,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn sub */
             tcg_gen_sub_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x03: /* insn rsub drsub */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -379,11 +367,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn rsub */
             tcg_gen_sub_i32(t_op1_32, t_op2_32, t_op1_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x04: /* insn ADD DADD */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -393,11 +377,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn ADD */
             tcg_gen_add_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0a: /* insn CMPSUB.A DCMPSUB.A */
         ILLEGAL_INSN(!UCOP_SET(23)); /* S bit */
@@ -407,11 +387,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             gen_helper_sub_cc_i64(t_op1_64, t_op1_64, t_op2_64);
         } else { /* insn CMPSUB.A */
             gen_helper_sub_cc_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0b: /* insn cmpadd dcmpadd */
         ILLEGAL_INSN(!UCOP_SET(23)); /* S bit */
@@ -421,11 +397,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             gen_helper_add_cc_i64(t_op1_64, t_op1_64, t_op2_64);
         } else { /* insn CMPADD */
             gen_helper_add_cc_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0c: /* insn or dor */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -435,11 +407,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn or */
             tcg_gen_or_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0d: /* insn MOV DMOV */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -449,9 +417,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
         } else { /* insn MOV */
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0e: /* insn andn dandn */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -461,11 +427,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn andn */
             tcg_gen_andc_i32(t_op1_32, t_op1_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
-            tcg_temp_free_i32(t_op1_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op1_64);
-        tcg_temp_free_i64(t_op2_64);
         break;
     case 0x0f: /* insn NOT DNOT */
         ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
@@ -476,12 +438,22 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn NOT */
             tcg_gen_not_i32(t_op2_32, t_op2_32);
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
-            tcg_temp_free_i32(t_op2_32);
         }
-        tcg_temp_free_i64(t_op2_64);
         break;
     default:
         ILLEGAL_INSN(true);
+    }
+
+    /* Free temp variables */
+    if ((UCOP_OPCODE != 0x0d) && (UCOP_OPCODE != 0x0f)) { /* if two ops */
+        tcg_temp_free_i64(t_op1_64);
+        if (!UCOP_SET(22)) {
+            tcg_temp_free_i32(t_op1_32);
+        }
+    }
+    tcg_temp_free_i64(t_op2_64);
+    if (!UCOP_SET(22)) {
+        tcg_temp_free_i32(t_op2_32);
     }
 }
 
