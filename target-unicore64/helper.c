@@ -45,7 +45,7 @@ void helper_cp1_putc(target_ulong x)
 
 void helper_cp1_putx(target_ulong x)
 {
-    printf("--%16" PRIx64 "--", x); /* Output to stdout */
+    printf("\n--%16" PRIx64 "--", x); /* Output to stdout */
     fflush(NULL);
 }
 
