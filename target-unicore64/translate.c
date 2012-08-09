@@ -432,7 +432,24 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_temp_free_i32(t_flag_32);
         return;
     }
+    if ((insn & 0xf3ff07ff) == 0x30000000) { /* insn mov afr, rs1 */
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
+        t_flag_32 = tcg_temp_new_i32();
+
+        tcg_gen_trunc_i64_i32(t_flag_32, cpu_R[UCOP_REG_S1]);
+        if (UCOP_SET(27) && UCOP_SET(26)) { /* F bit C bit */
+            gen_helper_afr_write(t_flag_32);
+        } else {
+            ILLEGAL_INSN(true);
+        }
+
+        tcg_temp_free_i32(t_flag_32);
+        return;
+    }
     if ((insn & 0xf3e0ffff) == 0x20000000) { /* insn mov rd, afr */
+        ILLEGAL_INSN(UCOP_REG_D == 31);
+
         t_flag_32 = tcg_temp_new_i32();
 
         if (UCOP_SET(27) && UCOP_SET(26)) { /* F bit C bit */
