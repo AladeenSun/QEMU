@@ -635,12 +635,24 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     }
 
     if (UCOP_OPCODE == 0xf) {
-        ILLEGAL_INSN(insn & 0x00ff07ff); /* other bits must be 0 */
-        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+        if (!(insn & 0x00ff07ff)) { /* JUMP and CALL-R */
+            ILLEGAL_INSN(UCOP_REG_S1 == 31);
 
-        /* JUMP and CALL-R instruction */
-        tcg_gen_mov_i64(cpu_R[31], cpu_R[UCOP_REG_S1]);
-        s->dc_jmp = DISAS_JUMP;
+            tcg_gen_mov_i64(cpu_R[31], cpu_R[UCOP_REG_S1]);
+            s->dc_jmp = DISAS_JUMP;
+        } else { /* RETURN and ERET */
+            ILLEGAL_INSN(insn & 0x003fffff); /* other bits must be 0 */
+
+            if ((insn & 0x00c00000) == 0x00800000) {
+                /* RETURN instruction: r31 <- r30 */
+                tcg_gen_mov_i64(cpu_R[31], cpu_R[30]);
+                s->dc_jmp = DISAS_JUMP;
+            }
+            if ((insn & 0x00c00000) == 0x00c00000) {
+                /* ERET instruction: r31 <- r30, ASR <- BSR */
+                ILLEGAL_INSN(true);
+            }
+        }
     } else { /* This branch means IMM24 */
         if (UCOP_OPCODE != 0xe) { /* conditional branch */
             s->dc_condlabel = gen_new_label(); /* label for next instruction */
