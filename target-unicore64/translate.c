@@ -84,8 +84,8 @@ typedef struct DisasContext {
     int condlabel; /* Label for next instruction */
 } DisasContext;
 
-#define gen_load_cpu_field(tmp_64, name)               \
-    tcg_gen_ld_i64(tmp_64, cpu_env, offsetof(CPUUniCore64State, name))
+#define gen_load_cpu_field(t_op_64, name)               \
+    tcg_gen_ld_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
 static void gen_test_cond(int notcond, int label)
 {
@@ -525,7 +525,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    TCGv_i64 tmp;
+    TCGv_i64 t_creg_64;
 
     switch (UCOP_CPNUM) {
     case 1: /* fake ocd */
@@ -535,16 +535,16 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
         switch (UCOP_REG_D) { /* REG_D is cd */
         case 0: /* movc p1.c0, rs1, #0 */
-            tmp = tcg_temp_new_i64();
-            tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_S1]);
-            gen_helper_cp1_putc(tmp);
-            tcg_temp_free(tmp);
+            t_creg_64 = tcg_temp_new_i64();
+            tcg_gen_mov_i64(t_creg_64, cpu_R[UCOP_REG_S1]);
+            gen_helper_cp1_putc(t_creg_64);
+            tcg_temp_free(t_creg_64);
             break;
         case 1: /* movc p1.c1, rs1, #0 */
-            tmp = tcg_temp_new_i64();
-            tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_S1]);
-            gen_helper_cp1_putx(tmp);
-            tcg_temp_free(tmp);
+            t_creg_64 = tcg_temp_new_i64();
+            tcg_gen_mov_i64(t_creg_64, cpu_R[UCOP_REG_S1]);
+            gen_helper_cp1_putx(t_creg_64);
+            tcg_temp_free(t_creg_64);
             break;
         default:
             ILLEGAL_INSN(true);
