@@ -630,6 +630,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     dc->dc_pc = pc_start;
     dc->dc_jmp = DISAS_NEXT;
     dc->dc_singlestep = env->singlestep_enabled;
+    dc->condjmp = false;
 
     num_insns = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
