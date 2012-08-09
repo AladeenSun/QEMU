@@ -60,8 +60,8 @@ uint32_t HELPER(sub_cc_i32)(uint32_t a, uint32_t b)
     result = a - b;
     env->NF = result >> 31;
     env->ZF = (result == 0);
-    env->CF = result < a;
-    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 31;
+    env->CF = a >= b;
+    env->VF = ((a ^ b) & (a ^ result)) >> 31;
     return result;
 }
 
@@ -71,8 +71,8 @@ uint64_t HELPER(sub_cc_i64)(uint64_t a, uint64_t b)
     result = a - b;
     env->NF = result >> 63;
     env->ZF = (result == 0);
-    env->CF = result < a;
-    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 63;
+    env->CF = a >= b;
+    env->VF = ((a ^ b) & (a ^ result)) >> 63;
     return result;
 }
 
