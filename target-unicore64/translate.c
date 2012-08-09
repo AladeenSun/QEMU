@@ -80,8 +80,8 @@ typedef struct DisasContext {
     int dc_singlestep;
     target_ulong dc_pc;
     struct TranslationBlock *dc_tb;
-    int condjmp;
-    int condlabel; /* Label for next instruction */
+    int dc_condinsn; /* If the insn has conditional test */
+    int dc_condlabel; /* Label for next instruction */
 } DisasContext;
 
 #define gen_load_cpu_field(t_op_64, name)               \
@@ -507,9 +507,9 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     ILLEGAL_INSN(UCOP_OPCODE == 0xf);
 
     if (UCOP_OPCODE != 0xe) { /* conditional jump */
-        s->condlabel = gen_new_label(); /* label for next instruction */
-        gen_test_cond(UCOP_OPCODE, s->condlabel);
-        s->condjmp = true;
+        s->dc_condlabel = gen_new_label(); /* label for next instruction */
+        gen_test_cond(UCOP_OPCODE, s->dc_condlabel);
+        s->dc_condinsn = true;
     }
 
     if (UCOP_SET(28)) { /* link */
@@ -630,7 +630,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     dc->dc_pc = pc_start;
     dc->dc_jmp = DISAS_NEXT;
     dc->dc_singlestep = env->singlestep_enabled;
-    dc->condjmp = false;
+    dc->dc_condinsn = false;
 
     num_insns = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
@@ -646,9 +646,9 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 
         disas_uc64_insn(env, dc);
 
-        if (dc->condjmp && !dc->dc_jmp) { /* conditional instructions */
-            gen_set_label(dc->condlabel);
-            dc->condjmp = false;
+        if (dc->dc_condinsn && !dc->dc_jmp) { /* conditional instructions */
+            gen_set_label(dc->dc_condlabel);
+            dc->dc_condinsn = false;
         }
 
         /* Translation stops when a conditional branch is encountered.
@@ -697,10 +697,10 @@ done_disas_loop:
             UNHANDLED_FLOW(true);
         }
 
-        if (dc->condjmp) { /* branch instructions */
-            gen_set_label(dc->condlabel);
+        if (dc->dc_condinsn) { /* branch instructions */
+            gen_set_label(dc->dc_condlabel);
             gen_goto_tb(dc, 1, dc->dc_pc);
-            dc->condjmp = false;
+            dc->dc_condinsn = false;
         }
     }
 
