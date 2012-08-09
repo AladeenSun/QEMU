@@ -11,4 +11,9 @@
 DEF_HELPER_1(cp1_putc, void, i64)
 DEF_HELPER_1(cp1_putx, void, i64)
 
+DEF_HELPER_2(sub_cc_i32, i32, i32, i32)
+DEF_HELPER_2(sub_cc_i64, i64, i64, i64)
+DEF_HELPER_2(add_cc_i32, i32, i32, i32)
+DEF_HELPER_2(add_cc_i64, i64, i64, i64)
+
 #include "def-helper.h"

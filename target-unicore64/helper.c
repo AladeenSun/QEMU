@@ -3,6 +3,7 @@
  */
 
 #include "cpu.h"
+#include "dyngen-exec.h"
 #include "gdbstub.h"
 #include "helper.h"
 #include "host-utils.h"
@@ -46,6 +47,55 @@ void helper_cp1_putx(target_ulong x)
 {
     printf("--%16" PRIx64 "--", x); /* Output to stdout */
     fflush(NULL);
+}
+
+/*
+ * Flag setting arithmetic is awkward because we need to do comparisons.
+ * The only way to do that in TCG is a conditional branch, which clobbers
+ * all our temporaries.  For now implement these as helper functions.
+ */
+uint32_t HELPER(sub_cc_i32)(uint32_t a, uint32_t b)
+{
+    uint32_t result;
+    result = a - b;
+    env->NF = result >> 31;
+    env->ZF = (result == 0);
+    env->CF = result < a;
+    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 31;
+    return result;
+}
+
+uint64_t HELPER(sub_cc_i64)(uint64_t a, uint64_t b)
+{
+    uint64_t result;
+    result = a - b;
+    env->NF = result >> 63;
+    env->ZF = (result == 0);
+    env->CF = result < a;
+    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 63;
+    return result;
+}
+
+uint32_t HELPER(add_cc_i32)(uint32_t a, uint32_t b)
+{
+    uint32_t result;
+    result = a + b;
+    env->NF = result >> 31;
+    env->ZF = (result == 0);
+    env->CF = result < a;
+    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 31;
+    return result;
+}
+
+uint64_t HELPER(add_cc_i64)(uint64_t a, uint64_t b)
+{
+    uint64_t result;
+    result = a + b;
+    env->NF = result >> 63;
+    env->ZF = (result == 0);
+    env->CF = result < a;
+    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 63;
+    return result;
 }
 
 #ifdef CONFIG_USER_ONLY
