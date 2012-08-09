@@ -1,1 +1,6 @@
 # For UniCore64 machines and boards
+
+# PKUnity-v4 SoC and board information
+obj-${CONFIG_PUV4} += puv4.o
+
+obj-y := $(addprefix ../,$(obj-y))
