@@ -549,14 +549,17 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     ILLEGAL_INSN((insn >> 29) != 3); /* ONLY 011 is handled */
     ILLEGAL_INSN(!UCOP_LDST_BHD); /* prefetch or sync? */
     ILLEGAL_INSN(UCOP_REG_D == 31);
-    ILLEGAL_INSN(UCOP_REG_S1 == 31);
 
     t_addr = tcg_temp_new_i64();
     t_op2_64 = tcg_temp_new_i64();
     t_rd_64 = tcg_temp_new_i64();
 
     /* Prepare base address */
-    tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+    if (UCOP_REG_S1==31) {
+        tcg_gen_movi_i64(t_addr, s->dc_pc - 4);
+    } else {
+        tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+    }
 
     /* Prepare op2 */
     if (UCOP_SET(21)) { /* reg or imm */
@@ -636,6 +639,8 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     }
 
     if (!UCOP_SET(27) || UCOP_SET(26)) { /* post || writeback */
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
         tcg_gen_mov_i64(cpu_R[UCOP_REG_S1], t_addr);
     }
 
