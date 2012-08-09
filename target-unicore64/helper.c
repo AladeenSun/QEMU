@@ -49,6 +49,18 @@ void helper_cp1_putx(target_ulong x)
     fflush(NULL);
 }
 
+void HELPER(afr_write)(uint32_t x)
+{
+    env->NF = (x >> 3) & 0x1;
+    env->ZF = (x >> 2) & 0x1;
+    env->CF = (x >> 1) & 0x1;
+    env->VF = (x >> 0) & 0x1;
+}
+
+uint32_t HELPER(afr_read)(void)
+{
+    return (env->NF << 3) | (env->ZF << 2) | (env->CF << 1) | (env->VF << 0);
+}
 /*
  * Flag setting arithmetic is awkward because we need to do comparisons.
  * The only way to do that in TCG is a conditional branch, which clobbers
