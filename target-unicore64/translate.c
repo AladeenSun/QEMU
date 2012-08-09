@@ -535,23 +535,30 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     target_ulong t_addr;
 
-    ILLEGAL_INSN(UCOP_OPCODE == 0xf);
-
-    if (UCOP_OPCODE != 0xe) { /* conditional jump */
-        s->dc_condlabel = gen_new_label(); /* label for next instruction */
-        gen_test_cond(UCOP_OPCODE, s->dc_condlabel);
-        s->dc_condinsn = true;
-    }
-
     if (UCOP_SET(28)) { /* link */
         /* r30 <- next_insn */
         tcg_gen_movi_i64(cpu_R[30], s->dc_pc);
     }
 
-    /* r31 <- current_insn + (signed_offset * 4) */
-    t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
-    gen_goto_tb(s, 0, t_addr);
-    s->dc_jmp = DISAS_TB_JUMP;
+    if (UCOP_OPCODE == 0xf) {
+        ILLEGAL_INSN(insn & 0x00ff07ff); /* other bits must be 0 */
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
+        /* JUMP and CALL-R instruction */
+        tcg_gen_mov_i64(cpu_R[31], cpu_R[UCOP_REG_S1]);
+        s->dc_jmp = DISAS_JUMP;
+    } else { /* This branch means IMM24 */
+        if (UCOP_OPCODE != 0xe) { /* conditional branch */
+            s->dc_condlabel = gen_new_label(); /* label for next instruction */
+            gen_test_cond(UCOP_OPCODE, s->dc_condlabel);
+            s->dc_condinsn = true;
+        } /* else: UCOP_OPCODE == 0xe, it's insn CALL, just fall through */
+
+        /* r31 <- current_insn + (signed_offset * 4) */
+        t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
+        gen_goto_tb(s, 0, t_addr);
+        s->dc_jmp = DISAS_TB_JUMP;
+    }
 }
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -723,6 +730,9 @@ done_disas_loop:
             break;
         case DISAS_TB_JUMP:
             /* nothing more to generate */
+            break;
+        case DISAS_JUMP:
+            tcg_gen_exit_tb(0);
             break;
         default:
             UNHANDLED_FLOW(true);
