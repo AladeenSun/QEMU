@@ -641,15 +641,17 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             tcg_gen_mov_i64(cpu_R[31], cpu_R[UCOP_REG_S1]);
             s->dc_jmp = DISAS_JUMP;
         } else { /* RETURN and ERET */
-            ILLEGAL_INSN(insn & 0x003fffff); /* other bits must be 0 */
+            ILLEGAL_INSN(UCOP_SET(28));
 
-            if ((insn & 0x00c00000) == 0x00800000) {
+            switch (insn & 0x00ffffff) {
+            case 0x00800000:
                 /* RETURN instruction: r31 <- r30 */
                 tcg_gen_mov_i64(cpu_R[31], cpu_R[30]);
                 s->dc_jmp = DISAS_JUMP;
-            }
-            if ((insn & 0x00c00000) == 0x00c00000) {
+                break;
+            case 0x00c00000:
                 /* ERET instruction: r31 <- r30, ASR <- BSR */
+            default:
                 ILLEGAL_INSN(true);
             }
         }
