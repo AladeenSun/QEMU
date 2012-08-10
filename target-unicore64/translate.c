@@ -97,11 +97,11 @@ static void gen_test_cond(int notcond, int label)
     switch (notcond ^ 1) {
     case 0x0: /* eq: Z */
         gen_load_cpu_field(t_f1_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         break;
     case 0x1: /* ne: !Z */
         gen_load_cpu_field(t_f1_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         break;
     case 0x2: /* cs: C */
         gen_load_cpu_field(t_f1_64, CF);
@@ -113,19 +113,19 @@ static void gen_test_cond(int notcond, int label)
         break;
     case 0x4: /* mi: N */
         gen_load_cpu_field(t_f1_64, NF);
-        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         break;
     case 0x5: /* pl: !N */
         gen_load_cpu_field(t_f1_64, NF);
-        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         break;
     case 0x6: /* vs: V */
         gen_load_cpu_field(t_f1_64, VF);
-        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         break;
     case 0x7: /* vc: !V */
         gen_load_cpu_field(t_f1_64, VF);
-        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         break;
     case 0x8: /* hi: C && !Z */
         t_f2_64 = tcg_temp_new_i64();
@@ -133,7 +133,7 @@ static void gen_test_cond(int notcond, int label)
         gen_load_cpu_field(t_f1_64, CF);
         tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, t_label);
         gen_load_cpu_field(t_f2_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_NE, t_f2_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f2_64, 0, label);
         gen_set_label(t_label);
         tcg_temp_free_i64(t_f2_64);
         break;
@@ -142,7 +142,7 @@ static void gen_test_cond(int notcond, int label)
         gen_load_cpu_field(t_f1_64, CF);
         tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         gen_load_cpu_field(t_f2_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f2_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f2_64, 0, label);
         tcg_temp_free_i64(t_f2_64);
         break;
     case 0xa: /* ge: N == V -> N ^ V == 0 */
@@ -150,7 +150,7 @@ static void gen_test_cond(int notcond, int label)
         gen_load_cpu_field(t_f1_64, VF);
         gen_load_cpu_field(t_f2_64, NF);
         tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
-        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         tcg_temp_free_i64(t_f2_64);
         break;
     case 0xb: /* lt: N != V -> N ^ V != 0 */
@@ -158,29 +158,29 @@ static void gen_test_cond(int notcond, int label)
         gen_load_cpu_field(t_f1_64, VF);
         gen_load_cpu_field(t_f2_64, NF);
         tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
-        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         tcg_temp_free_i64(t_f2_64);
         break;
     case 0xc: /* gt: !Z && N == V */
         t_label = gen_new_label();
         t_f2_64 = tcg_temp_new_i64();
         gen_load_cpu_field(t_f1_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, t_label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, t_label);
         gen_load_cpu_field(t_f1_64, VF);
         gen_load_cpu_field(t_f2_64, NF);
         tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
-        tcg_gen_brcondi_i64(TCG_COND_GE, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
         gen_set_label(t_label);
         tcg_temp_free_i64(t_f2_64);
         break;
     case 0xd: /* le: Z || N != V */
         t_f2_64 = tcg_temp_new_i64();
         gen_load_cpu_field(t_f1_64, ZF);
-        tcg_gen_brcondi_i64(TCG_COND_EQ, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         gen_load_cpu_field(t_f1_64, VF);
         gen_load_cpu_field(t_f2_64, NF);
         tcg_gen_xor_i64(t_f1_64, t_f1_64, t_f2_64);
-        tcg_gen_brcondi_i64(TCG_COND_LT, t_f1_64, 0, label);
+        tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
         tcg_temp_free_i64(t_f2_64);
         break;
     default:
