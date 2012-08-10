@@ -567,7 +567,85 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN(true);
+    TCGv_i64 t_op1_64, t_op2_64, t_rd_64;
+    TCGv_i32 t_op1_32, t_op2_32, t_rd_32;
+
+    ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
+    ILLEGAL_INSN(UCOP_SET(26));
+    ILLEGAL_INSN(UCOP_SET(25));
+    ILLEGAL_INSN(UCOP_SET(24));
+    ILLEGAL_INSN(UCOP_SET(21));
+    ILLEGAL_INSN(UCOP_REG_D == 31);
+    ILLEGAL_INSN(UCOP_REG_S1 == 31);
+    ILLEGAL_INSN(UCOP_REG_S2 == 31);
+    ILLEGAL_INSN(UCOP_IMM_6);
+
+    t_op1_64 = tcg_temp_new_i64();
+    t_op2_64 = tcg_temp_new_i64();
+    t_rd_64 = tcg_temp_new_i64();
+
+    tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
+    tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+
+    if (!UCOP_SET(22)) {
+        t_op1_32 = tcg_temp_new_i32();
+        t_op2_32 = tcg_temp_new_i32();
+        t_rd_32 = tcg_temp_new_i32();
+        tcg_gen_trunc_i64_i32(t_op1_32, t_op1_64);
+        tcg_gen_trunc_i64_i32(t_op2_32, t_op2_64);
+    }
+
+    if (UCOP_SET(28)) { /* DDIV DIV */
+        if (UCOP_SET(22)) { /* 64 bit div */
+            if (UCOP_SET(27)) {
+                tcg_gen_divu_i64(t_rd_64, t_op1_64, t_op2_64);
+            } else {
+                tcg_gen_div_i64(t_rd_64, t_op1_64, t_op2_64);
+            }
+        } else { /* 32 bit div */
+            if (UCOP_SET(27)) {
+                tcg_gen_divu_i32(t_rd_32, t_op1_32, t_op2_32);
+                tcg_gen_extu_i32_i64(t_rd_64, t_rd_32);
+            } else {
+                tcg_gen_div_i32(t_rd_32, t_op1_32, t_op2_32);
+                tcg_gen_extu_i32_i64(t_rd_64, t_rd_32);
+            }
+        }
+    } else { /* DMUL MUL */
+        if (UCOP_SET(22)) { /* 64 bit mul */
+            if (UCOP_SET(27)) { /* DMLA */
+                tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+                tcg_gen_mul_i64(t_op1_64, t_op1_64, t_op2_64);
+                tcg_gen_add_i64(t_rd_64, t_rd_64, t_op1_64);
+            } else { /* DMUL */
+                tcg_gen_mul_i64(t_rd_64, t_op1_64, t_op2_64);
+            }
+        } else { /* 32 bit mul */
+            if (UCOP_SET(27)) { /* MLA */
+                tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+                tcg_gen_trunc_i64_i32(t_rd_32, t_rd_64);
+                tcg_gen_mul_i32(t_op1_32, t_op1_32, t_op2_32);
+                tcg_gen_add_i32(t_rd_32, t_rd_32, t_op1_32);
+                tcg_gen_extu_i32_i64(t_rd_64, t_rd_32);
+            } else { /* MUL */
+                tcg_gen_mul_i32(t_rd_32, t_op1_32, t_op2_32);
+                tcg_gen_extu_i32_i64(t_rd_64, t_rd_32);
+            }
+        }
+    }
+
+    /* Write the result */
+    tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
+
+    /* Free temp vars */
+    if (!UCOP_SET(22)) {
+        tcg_temp_free_i32(t_op1_32);
+        tcg_temp_free_i32(t_op2_32);
+        tcg_temp_free_i32(t_rd_32);
+    }
+    tcg_temp_free_i64(t_op1_64);
+    tcg_temp_free_i64(t_op2_64);
+    tcg_temp_free_i64(t_rd_64);
 }
 
 static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
