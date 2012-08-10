@@ -522,7 +522,6 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 t_addr, t_op2_64, t_rd_64;
 
-    ILLEGAL_INSN((insn >> 29) != 3); /* ONLY 011 is handled */
     ILLEGAL_INSN(!UCOP_LDST_BHD); /* prefetch or sync? */
     ILLEGAL_INSN(UCOP_REG_D == 31);
 
@@ -627,6 +626,49 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     tcg_temp_free_i64(t_addr);
     tcg_temp_free_i64(t_op2_64);
     tcg_temp_free_i64(t_rd_64);
+}
+
+static void do_atomic(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    TCGv_i64 t_addr, t_op2_64;
+
+    /* ONLY insn SWAP handled at present */
+    ILLEGAL_INSN((insn & 0xff800000) != 0x81800000);
+
+    ILLEGAL_INSN(UCOP_REG_D == 31);
+    ILLEGAL_INSN(UCOP_REG_S2 == 31);
+    ILLEGAL_INSN(UCOP_IMM_6);
+
+    t_addr = tcg_temp_new_i64();
+    t_op2_64 = tcg_temp_new_i64();
+
+    /* Prepare address */
+    if (UCOP_REG_S1 == 31) {
+        tcg_gen_movi_i64(t_addr, s->dc_pc);
+    } else {
+        tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+    }
+
+    /* Prepare op2 */
+    tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+
+    if (UCOP_SET(22)) { /* Double word */
+        ILLEGAL_INSN(UCOP_SET(21));
+
+        tcg_gen_qemu_ld64(cpu_R[UCOP_REG_D], t_addr, 1);
+        tcg_gen_qemu_st64(t_op2_64, t_addr, 1);
+    } else {
+        if (UCOP_SET(21)) { /* Byte */
+            tcg_gen_qemu_ld8u(cpu_R[UCOP_REG_D], t_addr, 1);
+            tcg_gen_qemu_st8(t_op2_64, t_addr, 1);
+        } else { /* Word */
+            tcg_gen_qemu_ld32u(cpu_R[UCOP_REG_D], t_addr, 1);
+            tcg_gen_qemu_st32(t_op2_64, t_addr, 1);
+        }
+    }
+
+    tcg_temp_free_i64(t_addr);
+    tcg_temp_free_i64(t_op2_64);
 }
 
 static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -746,9 +788,10 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
         do_muldiv(env, s, insn);
         break;
     case 0x3:
-        /* Fall through */
-    case 0x4:
         do_ldst(env, s, insn);
+        break;
+    case 0x4:
+        do_atomic(env, s, insn);
         break;
     case 0x5:
         do_branch(env, s, insn);
