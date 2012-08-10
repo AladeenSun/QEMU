@@ -303,7 +303,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     if ((UCOP_OPCODE != 0x0d) && (UCOP_OPCODE != 0x0f)) {
         t_op1_64 = tcg_temp_new_i64();
         if (UCOP_REG_S1 == 31) {
-            tcg_gen_movi_i64(t_op1_64, s->dc_pc - 4);
+            tcg_gen_movi_i64(t_op1_64, s->dc_pc);
         } else {
             tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
         }
@@ -321,7 +321,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     } else {
         ILLEGAL_INSN(UCOP_IMM_6);
         if (UCOP_REG_S2 == 31) {
-            tcg_gen_movi_i64(t_op2_64, s->dc_pc - 4);
+            tcg_gen_movi_i64(t_op2_64, s->dc_pc);
         } else {
             tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
         }
@@ -532,7 +532,7 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     /* Prepare base address */
     if (UCOP_REG_S1==31) {
-        tcg_gen_movi_i64(t_addr, s->dc_pc - 4);
+        tcg_gen_movi_i64(t_addr, s->dc_pc);
     } else {
         tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
     }
@@ -635,7 +635,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     if (UCOP_SET(28)) { /* link */
         /* r30 <- next_insn */
-        tcg_gen_movi_i64(cpu_R[30], s->dc_pc);
+        tcg_gen_movi_i64(cpu_R[30], s->dc_pc + 4);
     }
 
     if (UCOP_OPCODE == 0xf) {
@@ -667,7 +667,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } /* else: UCOP_OPCODE == 0xe, it's insn CALL, just fall through */
 
         /* r31 <- current_insn + (signed_offset * 4) */
-        t_addr = (s->dc_pc - 4) + ((((int32_t)insn) << 8) >> 6);
+        t_addr = s->dc_pc + ((((int32_t)insn) << 8) >> 6);
         gen_goto_tb(s, 0, t_addr);
         s->dc_jmp = DISAS_TB_JUMP;
     }
@@ -715,7 +715,6 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
     unsigned int insn;
 
     insn = ldl_code(s->dc_pc);
-    s->dc_pc += 4;
 
     /* UniCore64 instructions class:
      *   AAAx xxxx xxxx xxxx xxxx xxxx xxxx xxxx
@@ -795,6 +794,8 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
         UNHANDLED_FLOW(tb->cflags & CF_LAST_IO);
 
         disas_uc64_insn(env, dc);
+
+        dc->dc_pc += 4;
 
         if (dc->dc_condinsn && !dc->dc_jmp) { /* conditional instructions */
             gen_set_label(dc->dc_condlabel);
