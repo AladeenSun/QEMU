@@ -88,14 +88,14 @@ typedef struct DisasContext {
 #define gen_load_cpu_field(t_op_64, name)               \
     tcg_gen_ld_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
-static void gen_test_cond(int notcond, int label)
+static void gen_test_cond(int cond, int label)
 {
     TCGv_i64 t_f1_64, t_f2_64;
     int t_label;
 
     t_f1_64 = tcg_temp_new_i64();
 
-    switch (notcond ^ 1) {
+    switch (cond) {
     case 0x0: /* eq: Z */
         gen_load_cpu_field(t_f1_64, ZF);
         tcg_gen_brcondi_i64(TCG_COND_NE, t_f1_64, 0, label);
@@ -185,7 +185,7 @@ static void gen_test_cond(int notcond, int label)
         tcg_temp_free_i64(t_f2_64);
         break;
     default:
-        fprintf(stderr, "Bad condition code 0x%x\n", notcond);
+        fprintf(stderr, "Bad condition code 0x%x\n", cond);
         abort();
     }
 
@@ -301,7 +301,7 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     /* Two branches */
     s->dc_condlabel = gen_new_label(); /* label for next instruction */
-    gen_test_cond(UCOP_CMOV_COND, s->dc_condlabel);
+    gen_test_cond(UCOP_CMOV_COND ^ 1, s->dc_condlabel);
     s->dc_condinsn = true;
 
     /* Prepare op2 */
@@ -756,7 +756,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     } else { /* This branch means IMM24 */
         if (UCOP_OPCODE != 0xe) { /* conditional branch */
             s->dc_condlabel = gen_new_label(); /* label for next instruction */
-            gen_test_cond(UCOP_OPCODE, s->dc_condlabel);
+            gen_test_cond(UCOP_OPCODE ^ 1, s->dc_condlabel);
             s->dc_condinsn = true;
         } /* else: UCOP_OPCODE == 0xe, it's insn CALL, just fall through */
 
