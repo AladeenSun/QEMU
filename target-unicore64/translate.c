@@ -50,11 +50,10 @@ void uc64_translate_init(void)
 #include "helper.h"
 }
 
-#define ILLEGAL_INSN(cond)                                              \
-        if (cond) {                                                     \
-            fprintf(stderr, "Illegal instruction %08x at line %d!",     \
-                insn, __LINE__);                                        \
-            abort();                                                    \
+#define ILLEGAL_INSN(cond)                                                   \
+        if (cond) {                                                          \
+            cpu_abort(env, "Illegal UniCore64 instruction %08x at line %d!", \
+                insn, __LINE__);                                             \
         }
 
 #define UNHANDLED_FLOW(cond)                                                 \
@@ -89,7 +88,7 @@ typedef struct DisasContext {
 #define gen_load_cpu_field(t_op_64, name)               \
     tcg_gen_ld_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
-static void gen_test_cond(int cond, int label, uint32_t insn)
+static void gen_test_cond(int cond, int label)
 {
     TCGv_i64 t_f1_64, t_f2_64;
     int t_label;
@@ -186,7 +185,8 @@ static void gen_test_cond(int cond, int label, uint32_t insn)
         tcg_temp_free_i64(t_f2_64);
         break;
     default:
-        ILLEGAL_INSN(true);
+        fprintf(stderr, "Bad condition code 0x%x\n", cond);
+        abort();
     }
 
     tcg_temp_free_i64(t_f1_64);
@@ -301,7 +301,7 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     /* Two branches */
     s->dc_condlabel = gen_new_label(); /* label for next instruction */
-    gen_test_cond(UCOP_CMOV_COND ^ 1, s->dc_condlabel, insn);
+    gen_test_cond(UCOP_CMOV_COND ^ 1, s->dc_condlabel);
     s->dc_condinsn = true;
 
     /* Prepare op2 */
@@ -834,7 +834,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     } else { /* This branch means IMM24 */
         if (UCOP_OPCODE != 0xe) { /* conditional branch */
             s->dc_condlabel = gen_new_label(); /* label for next instruction */
-            gen_test_cond(UCOP_OPCODE ^ 1, s->dc_condlabel, insn);
+            gen_test_cond(UCOP_OPCODE ^ 1, s->dc_condlabel);
             s->dc_condinsn = true;
         } /* else: UCOP_OPCODE == 0xe, it's insn CALL, just fall through */
 
