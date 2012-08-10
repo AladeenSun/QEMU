@@ -301,10 +301,12 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     /* Prepare op1 if two operands */
     if ((UCOP_OPCODE != 0x0d) && (UCOP_OPCODE != 0x0f)) {
-        ILLEGAL_INSN(UCOP_REG_S1 == 31);
-
         t_op1_64 = tcg_temp_new_i64();
-        tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
+        if (UCOP_REG_S1 == 31) {
+            tcg_gen_movi_i64(t_op1_64, s->dc_pc - 4);
+        } else {
+            tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
+        }
 
         if (!UCOP_SET(22)) { /* If word, not Double word */
             t_op1_32 = tcg_temp_new_i32();
@@ -317,10 +319,12 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     if (UCOP_SET(21)) { /* reg or imm */
         tcg_gen_movi_i64(t_op2_64, UCOP_IMM11);
     } else {
-        ILLEGAL_INSN(UCOP_REG_S2 == 31);
         ILLEGAL_INSN(UCOP_IMM_6);
-
-        tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+        if (UCOP_REG_S2 == 31) {
+            tcg_gen_movi_i64(t_op2_64, s->dc_pc - 4);
+        } else {
+            tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+        }
     }
 
     if (!UCOP_SET(22)) { /* If word, not Double word */
