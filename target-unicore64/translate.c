@@ -582,7 +582,7 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     t_rd_64 = tcg_temp_new_i64();
 
     /* Prepare base address */
-    if (UCOP_REG_S1==31) {
+    if (UCOP_REG_S1 == 31) {
         tcg_gen_movi_i64(t_addr, s->dc_pc);
     } else {
         tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
