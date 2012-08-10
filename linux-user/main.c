@@ -1009,7 +1009,7 @@ void cpu_loop(CPUUniCore64State *env)
         switch (trapnr) {
         case UC64_EXCP_PRIV:
             /* Get system call number, only least 16 bits available */
-            get_user_u64(insn, env->regs[31]);
+            get_user_u64(insn, env->regs[31] - 4);
 
             if ((insn & 0xffff0000) != 0xf0000000) {
                 goto error;
