@@ -879,7 +879,24 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_exception(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN(true);
+    TCGv_i32 tmp;
+
+    if ((insn & 0xff000000) == 0xf0000000) { /* JEPRIV instruction */
+        /*
+         * NO BSR ASR BFR AFR handling
+         */
+        ILLEGAL_INSN((insn & 0x00ff0000) != 0); /* Least 16 bits available */
+
+        tmp = tcg_temp_new_i32();
+        tcg_gen_movi_i64(cpu_R[31], s->dc_pc + 4);
+        tcg_gen_movi_i32(tmp, UC64_EXCP_PRIV);
+        gen_helper_exception(tmp);
+        tcg_temp_free_i32(tmp);
+
+        s->dc_jmp = DISAS_TB_JUMP;
+    } else {
+        ILLEGAL_INSN(true);
+    }
 }
 
 static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)

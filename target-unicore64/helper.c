@@ -49,6 +49,12 @@ void helper_cp1_putx(target_ulong x)
     fflush(NULL);
 }
 
+void HELPER(exception)(uint32_t excp)
+{
+    env->exception_index = excp;
+    cpu_loop_exit(env);
+}
+
 void HELPER(afr_write)(uint32_t x)
 {
     env->NF = (x >> 3) & 0x1;

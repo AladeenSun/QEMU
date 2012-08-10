@@ -65,6 +65,8 @@ typedef struct CPUUniCore64State {
 #define AFR_N                   (1 << 3)
 #define AFR_SZCV                (AFR_S | AFR_Z | AFR_C | AFR_V)
 
+#define UC64_EXCP_PRIV          ASR_MODE_PRIV
+
 /* Return the current ASR value.  */
 target_ulong cpu_asr_read(CPUUniCore64State *env1);
 /* Set the ASR.  Note that some bits of mask must be all-set or all-clear.  */

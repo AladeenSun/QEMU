@@ -1000,12 +1000,26 @@ error:
 void cpu_loop(CPUUniCore64State *env)
 {
     int trapnr;
+    unsigned int syscall_nr, insn;
 
     for (;;) {
         cpu_exec_start(env);
         trapnr = uc64_cpu_exec(env);
         cpu_exec_end(env);
         switch (trapnr) {
+        case UC64_EXCP_PRIV:
+            /* Get system call number, only least 16 bits available */
+            get_user_u64(insn, env->regs[31]);
+
+            if ((insn & 0xffff0000) != 0xf0000000) {
+                goto error;
+            }
+
+            syscall_nr = insn & 0xffff;
+            env->regs[0] = do_syscall(env, syscall_nr,
+                    env->regs[0], env->regs[1], env->regs[2],
+                    env->regs[3], env->regs[4], env->regs[5], 0, 0);
+            break;
         case EXCP_INTERRUPT:
             goto error; /* FIXME */
             break;
