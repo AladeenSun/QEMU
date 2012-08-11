@@ -67,6 +67,27 @@ uint32_t HELPER(afr_read)(void)
 {
     return (env->NF << 3) | (env->ZF << 2) | (env->CF << 1) | (env->VF << 0);
 }
+
+uint32_t HELPER(clo_i32)(uint32_t x)
+{
+        return clo32(x);
+}
+
+uint64_t HELPER(clo_i64)(uint64_t x)
+{
+        return clo64(x);
+}
+
+uint32_t HELPER(clz_i32)(uint32_t x)
+{
+        return clz32(x);
+}
+
+uint64_t HELPER(clz_i64)(uint64_t x)
+{
+        return clz64(x);
+}
+
 /*
  * Flag setting arithmetic is awkward because we need to do comparisons.
  * The only way to do that in TCG is a conditional branch, which clobbers

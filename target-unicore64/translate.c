@@ -300,7 +300,42 @@ static void do_shift(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_clzclo(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    ILLEGAL_INSN(true);
+    TCGv_i64 t_op1_64;
+    TCGv_i32 t_op1_32;
+
+    ILLEGAL_INSN(UCOP_SET(25));
+    ILLEGAL_INSN(UCOP_SET(24));
+    ILLEGAL_INSN(UCOP_SET(21));
+    ILLEGAL_INSN(UCOP_IMM11);
+
+    t_op1_64 = tcg_temp_new_i64();
+    tcg_gen_mov_i64(t_op1_64, cpu_R[UCOP_REG_S1]);
+
+    if (UCOP_SET(22)) { /* 64 bit */
+        if (UCOP_SET(23)) { /* DCNTLZ */
+            gen_helper_clz_i64(t_op1_64, t_op1_64);
+        } else { /* DCNTLO */
+            gen_helper_clo_i64(t_op1_64, t_op1_64);
+        }
+    } else {
+        t_op1_32 = tcg_temp_new_i32();
+        tcg_gen_trunc_i64_i32(t_op1_32, t_op1_64);
+        if (UCOP_SET(23)) { /* CNTLZ */
+            gen_helper_clz_i32(t_op1_32, t_op1_32);
+            tcg_gen_extu_i32_i64(t_op1_64, t_op1_32);
+        } else { /* CNTLO */
+            gen_helper_clo_i32(t_op1_32, t_op1_32);
+            tcg_gen_extu_i32_i64(t_op1_64, t_op1_32);
+        }
+    }
+
+    tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+
+    if (!UCOP_SET(22)) {
+        tcg_temp_free_i32(t_op1_32);
+    }
+
+    tcg_temp_free_i64(t_op1_64);
 }
 
 static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
