@@ -88,6 +88,21 @@ typedef struct DisasContext {
 #define gen_load_cpu_field(t_op_64, name)               \
     tcg_gen_ld_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
+/* Set flags from result.  */
+static inline void gen_flags_logic(TCGv_i64 var_rd)
+{
+    TCGv_i64 t_flag = tcg_temp_new_i64();
+
+    tcg_gen_st_i64(var_rd, cpu_env, offsetof(CPUUniCore64State, NF));
+    tcg_gen_st_i64(var_rd, cpu_env, offsetof(CPUUniCore64State, ZF));
+
+    tcg_gen_movi_i64(t_flag, 0);
+    tcg_gen_st_i64(t_flag, cpu_env, offsetof(CPUUniCore64State, CF));
+    tcg_gen_st_i64(t_flag, cpu_env, offsetof(CPUUniCore64State, VF));
+
+    tcg_temp_free_i64(t_flag);
+}
+
 static void gen_test_cond(int cond, int label)
 {
     TCGv_i64 t_f1_64, t_f2_64;
@@ -295,7 +310,6 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     ILLEGAL_INSN(UCOP_REG_D == 31);
     ILLEGAL_INSN(!UCOP_SET(24));
-    ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
     ILLEGAL_INSN(UCOP_SET(11));
     ILLEGAL_INSN((UCOP_CMOV_COND == 0xe) || (UCOP_CMOV_COND == 0xf));
 
@@ -335,6 +349,13 @@ static void do_condmove(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn CMOV */
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
         }
+    }
+
+    if (UCOP_SET(23)) { /* S bit */
+        if (!UCOP_SET(22)) { /* word */
+            tcg_gen_ext_i32_i64(t_op2_64, t_op2_32); /* Signed extend */
+        }
+        gen_flags_logic(t_op2_64);
     }
 
     /* Free temp variables */
@@ -570,7 +591,6 @@ static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     TCGv_i64 t_op1_64, t_op2_64, t_rd_64;
     TCGv_i32 t_op1_32, t_op2_32, t_rd_32;
 
-    ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
     ILLEGAL_INSN(UCOP_SET(26));
     ILLEGAL_INSN(UCOP_SET(25));
     ILLEGAL_INSN(UCOP_SET(24));
@@ -636,6 +656,13 @@ static void do_muldiv(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     /* Write the result */
     tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
+
+    if (UCOP_SET(23)) { /* S bit */
+        if (!UCOP_SET(22)) { /* word */
+            tcg_gen_ext_i32_i64(t_rd_64, t_rd_32); /* Signed extend */
+        }
+        gen_flags_logic(t_rd_64);
+    }
 
     /* Free temp vars */
     if (!UCOP_SET(22)) {
