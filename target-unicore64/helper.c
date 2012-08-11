@@ -55,17 +55,18 @@ void HELPER(exception)(uint32_t excp)
     cpu_loop_exit(env);
 }
 
-void HELPER(afr_write)(uint32_t x)
+void HELPER(afr_write)(uint64_t x)
 {
-    env->NF = (x >> 3) & 0x1;
-    env->ZF = (x >> 2) & 0x1;
-    env->CF = (x >> 1) & 0x1;
-    env->VF = (x >> 0) & 0x1;
+    env->NF = x << 60;
+    env->ZF = (~x) & AFR_Z;
+    env->CF = (x >> 1) & AFR_C;
+    env->VF = x << 63;
 }
 
-uint32_t HELPER(afr_read)(void)
+uint64_t HELPER(afr_read)(void)
 {
-    return (env->NF << 3) | (env->ZF << 2) | (env->CF << 1) | (env->VF << 0);
+    return (((env->NF >> 63) << 3) | ((env->ZF == 0) << 2) |
+        (env->CF << 1) | (env->VF >> 63));
 }
 
 uint32_t HELPER(clo_i32)(uint32_t x)
