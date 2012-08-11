@@ -63,7 +63,6 @@ typedef struct CPUUniCore64State {
 #define AFR_C                   (1 << 1)
 #define AFR_Z                   (1 << 2)
 #define AFR_N                   (1 << 3)
-#define AFR_SZCV                (AFR_S | AFR_Z | AFR_C | AFR_V)
 
 #define UC64_EXCP_PRIV          ASR_MODE_PRIV
 
