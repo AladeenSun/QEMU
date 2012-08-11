@@ -119,7 +119,7 @@ uint32_t HELPER(add_cc_i32)(uint32_t a, uint32_t b)
     result = a + b;
     env->NF = env->ZF = (int32_t)result;
     env->CF = result < a;
-    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 31;
+    env->VF = (int32_t)((a ^ b ^ -1) & (a ^ result));
     return result;
 }
 
@@ -129,7 +129,7 @@ uint64_t HELPER(add_cc_i64)(uint64_t a, uint64_t b)
     result = a + b;
     env->NF = env->ZF = result;
     env->CF = result < a;
-    env->VF = ((a ^ b ^ -1) & (a ^ result)) >> 63;
+    env->VF = (a ^ b ^ -1) & (a ^ result);
     return result;
 }
 
