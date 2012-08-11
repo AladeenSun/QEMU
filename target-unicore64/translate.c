@@ -407,53 +407,38 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     switch (UCOP_OPCODE) {
     case 0x00: /* insn and dand */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn dand */
-            tcg_gen_and_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_and_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn and */
-            tcg_gen_and_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_and_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x01: /* insn xor dxor */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn dxor */
-            tcg_gen_xor_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_xor_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn xor */
-            tcg_gen_xor_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_xor_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x02: /* insn sub dsub */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn dsub */
-            tcg_gen_sub_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_sub_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn sub */
-            tcg_gen_sub_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_sub_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x03: /* insn rsub drsub */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn drsub */
-            tcg_gen_sub_i64(t_op1_64, t_op2_64, t_op1_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_sub_i64(t_op2_64, t_op2_64, t_op1_64);
         } else { /* insn rsub */
-            tcg_gen_sub_i32(t_op1_32, t_op2_32, t_op1_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_sub_i32(t_op2_32, t_op2_32, t_op1_32);
         }
         break;
     case 0x04: /* insn ADD DADD */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn DADD */
-            tcg_gen_add_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_add_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn ADD */
-            tcg_gen_add_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_add_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x0a: /* insn CMPSUB.A DCMPSUB.A */
@@ -461,9 +446,9 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         ILLEGAL_INSN(UCOP_REG_D);
 
         if (UCOP_SET(22)) { /* insn DCMPSUB.A */
-            gen_helper_sub_cc_i64(t_op1_64, t_op1_64, t_op2_64);
+            gen_helper_sub_cc_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn CMPSUB.A */
-            gen_helper_sub_cc_i32(t_op1_32, t_op1_32, t_op2_32);
+            gen_helper_sub_cc_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x0b: /* insn cmpadd dcmpadd */
@@ -471,54 +456,57 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         ILLEGAL_INSN(UCOP_REG_D);
 
         if (UCOP_SET(22)) { /* insn DCMPADD */
-            gen_helper_add_cc_i64(t_op1_64, t_op1_64, t_op2_64);
+            gen_helper_add_cc_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn CMPADD */
-            gen_helper_add_cc_i32(t_op1_32, t_op1_32, t_op2_32);
+            gen_helper_add_cc_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x0c: /* insn or dor */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn dor */
-            tcg_gen_or_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_or_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn or */
-            tcg_gen_or_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_or_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x0d: /* insn MOV DMOV */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         ILLEGAL_INSN(UCOP_REG_S1);
-
-        if (UCOP_SET(22)) { /* insn DMOV */
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
-        } else { /* insn MOV */
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
-        }
+        /* Just write the result */
         break;
     case 0x0e: /* insn andn dandn */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         if (UCOP_SET(22)) { /* insn dandn */
-            tcg_gen_andc_i64(t_op1_64, t_op1_64, t_op2_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op1_64);
+            tcg_gen_andc_i64(t_op2_64, t_op1_64, t_op2_64);
         } else { /* insn andn */
-            tcg_gen_andc_i32(t_op1_32, t_op1_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op1_32);
+            tcg_gen_andc_i32(t_op2_32, t_op1_32, t_op2_32);
         }
         break;
     case 0x0f: /* insn NOT DNOT */
-        ILLEGAL_INSN(UCOP_SET(23)); /* S bit */
         ILLEGAL_INSN(UCOP_REG_S1);
 
         if (UCOP_SET(22)) { /* insn DNOT */
-            tcg_gen_not_i64(cpu_R[UCOP_REG_D], t_op2_64);
+            tcg_gen_not_i64(t_op2_64, t_op2_64);
         } else { /* insn NOT */
             tcg_gen_not_i32(t_op2_32, t_op2_32);
-            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
         }
         break;
     default:
         ILLEGAL_INSN(true);
+    }
+
+    /* Write result */
+    if ((UCOP_OPCODE != 0x0a) && (UCOP_OPCODE != 0x0b)) {
+        if (UCOP_SET(22)) { /* Double word */
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
+        } else { /* Word */
+            tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
+        }
+
+        /* Write flags logic */
+        if (UCOP_SET(23)) { /* S bit */
+            if (!UCOP_SET(22)) { /* word */
+                tcg_gen_ext_i32_i64(t_op2_64, t_op2_32); /* Signed extend */
+            }
+            gen_flags_logic(t_op2_64);
+        }
     }
 
     /* Free temp variables */
