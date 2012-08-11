@@ -703,7 +703,6 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     TCGv_i64 t_addr, t_op2_64, t_rd_64;
 
     ILLEGAL_INSN(!UCOP_LDST_BHD); /* prefetch or sync? */
-    ILLEGAL_INSN(UCOP_REG_D == 31);
 
     t_addr = tcg_temp_new_i64();
     t_op2_64 = tcg_temp_new_i64();
@@ -762,7 +761,11 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             break;
         }
     } else { /* store */
-        tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+        if (UCOP_REG_D == 31) {
+            tcg_gen_movi_i64(t_rd_64, s->dc_pc);
+        } else {
+            tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+        }
 
         switch (UCOP_LDST_BHD) {
         case 1:
@@ -800,6 +803,7 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     }
 
     if (UCOP_SET(25)) { /* Complete the load, in case rd==rs1 */
+        ILLEGAL_INSN(UCOP_REG_D == 31);
         tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
     }
 
