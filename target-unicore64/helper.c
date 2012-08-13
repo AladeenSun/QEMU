@@ -134,6 +134,66 @@ uint64_t HELPER(add_cc_i64)(uint64_t a, uint64_t b)
     return result;
 }
 
+uint32_t HELPER(sbc_cc_i32)(uint32_t a, uint32_t b)
+{
+    uint32_t result;
+    if (!env->CF) {
+        result = a - b - 1;
+        env->CF = a > b;
+    } else {
+        result = a - b;
+        env->CF = a >= b;
+    }
+    env->VF = ((a ^ b) & (a ^ result)) >> 31;
+    env->NF = env->ZF = (int32_t)result;
+    return result;
+}
+
+uint64_t HELPER(sbc_cc_i64)(uint64_t a, uint64_t b)
+{
+    uint64_t result;
+    if (!env->CF) {
+        result = a - b - 1;
+        env->CF = a > b;
+    } else {
+        result = a - b;
+        env->CF = a >= b;
+    }
+    env->VF = ((a ^ b) & (a ^ result)) >> 63;
+    env->NF = env->ZF = result;
+    return result;
+}
+
+uint32_t HELPER(adc_cc_i32)(uint32_t a, uint32_t b)
+{
+    uint32_t result;
+    if (!env->CF) {
+        result = a + b;
+        env->CF = result < a;
+    } else {
+        result = a + b + 1;
+        env->CF = result <= a;
+    }
+    env->VF = (int32_t)((a ^ b ^ -1) & (a ^ result));
+    env->NF = env->ZF = (int32_t)result;
+    return result;
+}
+
+uint64_t HELPER(adc_cc_i64)(uint64_t a, uint64_t b)
+{
+    uint64_t result;
+    if (!env->CF) {
+        result = a + b;
+        env->CF = result < a;
+    } else {
+        result = a + b + 1;
+        env->CF = result <= a;
+    }
+    env->VF = ((a ^ b ^ -1) & (a ^ result));
+    env->NF = env->ZF = result;
+    return result;
+}
+
 #ifdef CONFIG_USER_ONLY
 void switch_mode(CPUUniCore64State *env, int mode)
 {

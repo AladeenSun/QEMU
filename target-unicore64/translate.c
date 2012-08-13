@@ -207,6 +207,68 @@ static void gen_test_cond(int cond, int label)
     tcg_temp_free_i64(t_f1_64);
 }
 
+/* dest = T0 + T1 + CF. */
+static void gen_add_carry_i32(TCGv_i32 dest, TCGv_i32 t0, TCGv_i32 t1)
+{
+    TCGv_i32 tmp_32;
+    TCGv_i64 tmp_64;
+    tmp_32 = tcg_temp_new_i32();
+    tmp_64 = tcg_temp_new_i64();
+
+    tcg_gen_add_i32(dest, t0, t1);
+    gen_load_cpu_field(tmp_64, CF);
+    tcg_gen_trunc_i64_i32(tmp_32, tmp_64);
+    tcg_gen_add_i32(dest, dest, tmp_32);
+
+    tcg_temp_free_i32(tmp_32);
+    tcg_temp_free_i64(tmp_64);
+}
+
+/* dest = T0 - T1 + CF - 1.  */
+static void gen_sub_carry_i32(TCGv_i32 dest, TCGv_i32 t0, TCGv_i32 t1)
+{
+    TCGv_i32 tmp_32;
+    TCGv_i64 tmp_64;
+    tmp_32 = tcg_temp_new_i32();
+    tmp_64 = tcg_temp_new_i64();
+
+    tcg_gen_sub_i32(dest, t0, t1);
+    gen_load_cpu_field(tmp_64, CF);
+    tcg_gen_trunc_i64_i32(tmp_32, tmp_64);
+    tcg_gen_add_i32(dest, dest, tmp_32);
+    tcg_gen_subi_i32(dest, dest, 1);
+
+    tcg_temp_free_i32(tmp_32);
+    tcg_temp_free_i64(tmp_64);
+}
+
+/* dest = T0 + T1 + CF. */
+static void gen_add_carry_i64(TCGv_i64 dest, TCGv_i64 t0, TCGv_i64 t1)
+{
+    TCGv_i64 tmp_64;
+    tmp_64 = tcg_temp_new_i64();
+
+    tcg_gen_add_i64(dest, t0, t1);
+    gen_load_cpu_field(tmp_64, CF);
+    tcg_gen_add_i64(dest, dest, tmp_64);
+
+    tcg_temp_free_i64(tmp_64);
+}
+
+/* dest = T0 - T1 + CF - 1.  */
+static void gen_sub_carry_i64(TCGv_i64 dest, TCGv_i64 t0, TCGv_i64 t1)
+{
+    TCGv_i64 tmp_64;
+    tmp_64 = tcg_temp_new_i64();
+
+    tcg_gen_sub_i64(dest, t0, t1);
+    gen_load_cpu_field(tmp_64, CF);
+    tcg_gen_add_i64(dest, dest, tmp_64);
+    tcg_gen_subi_i64(dest, dest, 1);
+
+    tcg_temp_free_i64(tmp_64);
+}
+
 static inline void gen_goto_tb(DisasContext *s, int n, target_ulong dest)
 {
     TranslationBlock *tb;
@@ -500,6 +562,51 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
                 gen_helper_add_cc_i64(t_op2_64, t_op1_64, t_op2_64);
             } else { /* insn ADD */
                 gen_helper_add_cc_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        }
+        break;
+    case 0x05: /* insn addc daddc */
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DADDC */
+                gen_add_carry_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn ADDC */
+                gen_add_carry_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DADDC */
+                gen_helper_adc_cc_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn ADDC */
+                gen_helper_adc_cc_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        }
+        break;
+    case 0x06: /* insn subc dsubc */
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DSUBC */
+                gen_sub_carry_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn SUBC */
+                gen_sub_carry_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DSUBC */
+                gen_helper_sbc_cc_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn SUBC */
+                gen_helper_sbc_cc_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        }
+        break;
+    case 0x07: /* insn rsubc drsubc */
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DRSUBC */
+                gen_sub_carry_i64(t_op2_64, t_op2_64, t_op1_64);
+            } else { /* insn RSUBC */
+                gen_sub_carry_i32(t_op2_32, t_op2_32, t_op1_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DRSUBC */
+                gen_helper_sbc_cc_i64(t_op2_64, t_op2_64, t_op1_64);
+            } else { /* insn RSUBC */
+                gen_helper_sbc_cc_i32(t_op2_32, t_op2_32, t_op1_32);
             }
         }
         break;
