@@ -503,6 +503,28 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             }
         }
         break;
+    case 0x08: /* insn CMPAND DCMPAND */
+        ILLEGAL_INSN(!UCOP_SET(23)); /* S bit */
+        ILLEGAL_INSN(UCOP_REG_D);
+
+        if (UCOP_SET(22)) { /* insn DCMPAND */
+            tcg_gen_and_i64(t_op2_64, t_op1_64, t_op2_64);
+        } else { /* insn CMPAND */
+            tcg_gen_and_i32(t_op2_32, t_op1_32, t_op2_32);
+        }
+        logic_flag = true;
+        break;
+    case 0x09: /* insn CMPXOR DCMPXOR */
+        ILLEGAL_INSN(!UCOP_SET(23)); /* S bit */
+        ILLEGAL_INSN(UCOP_REG_D);
+
+        if (UCOP_SET(22)) { /* insn DCMPXOR */
+            tcg_gen_xor_i64(t_op2_64, t_op1_64, t_op2_64);
+        } else { /* insn XOR */
+            tcg_gen_xor_i32(t_op2_32, t_op1_32, t_op2_32);
+        }
+        logic_flag = true;
+        break;
     case 0x0a: /* insn CMPSUB.A DCMPSUB.A */
         ILLEGAL_INSN(!UCOP_SET(23)); /* S bit */
         ILLEGAL_INSN(UCOP_REG_D);
@@ -559,7 +581,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     }
 
     /* Write result */
-    if ((UCOP_OPCODE != 0x0a) && (UCOP_OPCODE != 0x0b)) {
+    if ((UCOP_OPCODE & 0xc) != 0x8) {
         if (UCOP_SET(22)) { /* Double word */
             tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_op2_64);
         } else { /* Word */
