@@ -38,10 +38,30 @@
 #define DPRINTF(fmt, ...) do {} while (0)
 #endif
 
-void tlb_fill(CPUUniCore64State *env, target_ulong addr, int is_write,
+void tlb_fill(CPUUniCore64State *env1, target_ulong addr, int is_write,
         int mmu_idx, uintptr_t retaddr)
 {
-    cpu_abort(env, "%s not supported yet\n", __func__);
+    TranslationBlock *tb;
+    CPUUniCore64State *saved_env;
+    int ret;
+
+    saved_env = env;
+    env = env1;
+
+    ret = uc64_cpu_handle_mmu_fault(env, addr, is_write, mmu_idx);
+    if (unlikely(ret)) {
+        if (retaddr) {
+            /* now we have a real cpu fault */
+            tb = tb_find_pc(retaddr);
+            if (tb) {
+                /* the PC is inside the translated code.
+                   It means that we have a virtual CPU fault */
+                cpu_restore_state(tb, env, retaddr);
+            }
+        }
+        cpu_loop_exit(env);
+    }
+    env = saved_env;
 }
 
 void switch_mode(CPUUniCore64State *env, int mode)
