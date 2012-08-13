@@ -533,6 +533,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         break;
     case 0x0d: /* insn MOV DMOV */
         ILLEGAL_INSN(UCOP_REG_S1);
+        ILLEGAL_INSN(UCOP_SET(23)); /* S bit, NO mov.a/dmov.a in UniCore64 */
         /* Just write the result */
         break;
     case 0x0e: /* insn andn dandn */
@@ -545,6 +546,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         break;
     case 0x0f: /* insn NOT DNOT */
         ILLEGAL_INSN(UCOP_REG_S1);
+        ILLEGAL_INSN(UCOP_SET(23)); /* S bit, NO not.a/dnot.a in UniCore64 */
 
         if (UCOP_SET(22)) { /* insn DNOT */
             tcg_gen_not_i64(t_op2_64, t_op2_64);
