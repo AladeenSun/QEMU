@@ -69,7 +69,10 @@ typedef struct CPUUniCore64State {
 #define AFR_Z                   (1 << 2)
 #define AFR_N                   (1 << 3)
 
-#define UC64_EXCP_PRIV          ASR_MODE_PRIV
+#define UC64_EXCP_PRIV          0x08
+#define UC64_EXCP_ITRAP         0x0c
+#define UC64_EXCP_DTRAP         0x10
+#define UC64_EXCP_INTR          0x20
 
 /* Return the current ASR value.  */
 target_ulong cpu_asr_read(CPUUniCore64State *env1);
