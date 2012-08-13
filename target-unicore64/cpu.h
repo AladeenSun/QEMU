@@ -39,6 +39,11 @@ typedef struct CPUUniCore64State {
     uint64_t bsr;
     uint64_t bfr;
 
+    /* Banked registers. */
+    uint64_t banked_r29[3];
+    uint64_t banked_bsr[3];
+    uint64_t banked_bfr[3];
+
     /* AFR cache for faster execution */
     uint64_t VF; /* V is the bit 31. All other bits are undefined */
     uint64_t CF; /* 0 or 1 */
@@ -56,7 +61,7 @@ typedef struct CPUUniCore64State {
         uint64_t c2_base; /* MMU translation table base.  */
         uint64_t c3_faultstatus; /* Fault status registers.  */
         uint64_t c4_faultaddr; /* Fault address registers.  */
-        uint64_t c4_excpaddr; /* Exception address register.*/
+        uint64_t c4_itrapaddr; /* Exception address register.*/
         uint64_t c9_excpbase; /* Exception base register. */
     } cp0;
 

@@ -78,9 +78,39 @@ void tlb_fill(CPUUniCore64State *env1, target_ulong addr, int is_write,
     env = saved_env;
 }
 
+/* Map CPU modes onto saved register banks */
+static inline int bank_number(int mode)
+{
+    switch (mode) {
+    case ASR_MODE_USER:
+        return 0;
+    case ASR_MODE_PRIV:
+        return 1;
+    case ASR_MODE_DEBUG:
+        return 2;
+    }
+    cpu_abort(cpu_single_env, "Bad mode %x\n", mode);
+    return -1;
+}
+
 void switch_mode(CPUUniCore64State *env, int mode)
 {
-    cpu_abort(env, "%s not supported yet\n", __func__);
+    int old_mode;
+    int bank_num;
+
+    old_mode = env->uncached_asr & ASR_MODE_SELECT;
+    if (mode == old_mode) {
+        return;
+    }
+    bank_num = bank_number(old_mode);
+    env->banked_r29[bank_num] = env->regs[29];
+    env->banked_bsr[bank_num] = env->uncached_asr;
+    env->banked_bfr[bank_num] = env->uncached_afr;
+
+    bank_num = bank_number(mode);
+    env->regs[29] = env->banked_r29[bank_num];
+    env->uncached_asr = env->banked_bsr[bank_num];
+    env->uncached_afr = env->banked_bfr[bank_num];
 }
 
 void do_interrupt(CPUUniCore64State *env)
@@ -108,13 +138,14 @@ void do_interrupt(CPUUniCore64State *env)
         cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
         return;
     }
-    /* Get exception virtual base address , only least 39 bits available */
+    /* Get exception virtual base address, only least 39 bits available */
     addr += (env->cp0.c9_excpbase & 0x7fffffffffULL);
 
+    switch_mode(env, new_mode);
     env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | new_mode;
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */
-    env->cp0.c4_excpaddr = env->regs[31];
+    env->cp0.c4_itrapaddr = env->regs[31];
     env->regs[31] = addr;
     env->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
