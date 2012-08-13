@@ -459,24 +459,48 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         logic_flag = true;
         break;
     case 0x02: /* insn sub dsub */
-        if (UCOP_SET(22)) { /* insn dsub */
-            tcg_gen_sub_i64(t_op2_64, t_op1_64, t_op2_64);
-        } else { /* insn sub */
-            tcg_gen_sub_i32(t_op2_32, t_op1_32, t_op2_32);
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DSUB */
+                tcg_gen_sub_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn SUB */
+                tcg_gen_sub_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DSUB */
+                gen_helper_sub_cc_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn SUB */
+                gen_helper_sub_cc_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
         }
         break;
     case 0x03: /* insn rsub drsub */
-        if (UCOP_SET(22)) { /* insn drsub */
-            tcg_gen_sub_i64(t_op2_64, t_op2_64, t_op1_64);
-        } else { /* insn rsub */
-            tcg_gen_sub_i32(t_op2_32, t_op2_32, t_op1_32);
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DRSUB */
+                tcg_gen_sub_i64(t_op2_64, t_op2_64, t_op1_64);
+            } else { /* insn RSUB */
+                tcg_gen_sub_i32(t_op2_32, t_op2_32, t_op1_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DRSUB */
+                gen_helper_sub_cc_i64(t_op2_64, t_op2_64, t_op1_64);
+            } else { /* insn RSUB */
+                gen_helper_sub_cc_i32(t_op2_32, t_op2_32, t_op1_32);
+            }
         }
         break;
     case 0x04: /* insn ADD DADD */
-        if (UCOP_SET(22)) { /* insn DADD */
-            tcg_gen_add_i64(t_op2_64, t_op1_64, t_op2_64);
-        } else { /* insn ADD */
-            tcg_gen_add_i32(t_op2_32, t_op1_32, t_op2_32);
+        if (!UCOP_SET(23)) { /* S bit */
+            if (UCOP_SET(22)) { /* insn DADD */
+                tcg_gen_add_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn ADD */
+                tcg_gen_add_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
+        } else {
+            if (UCOP_SET(22)) { /* insn DADD */
+                gen_helper_add_cc_i64(t_op2_64, t_op1_64, t_op2_64);
+            } else { /* insn ADD */
+                gen_helper_add_cc_i32(t_op2_32, t_op1_32, t_op2_32);
+            }
         }
         break;
     case 0x0a: /* insn CMPSUB.A DCMPSUB.A */
