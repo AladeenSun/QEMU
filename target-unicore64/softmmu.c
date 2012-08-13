@@ -105,11 +105,42 @@ void do_interrupt(CPUUniCore64State *env)
     env->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
 
+static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
+        int access_type, int is_user, target_phys_addr_t *phys_ptr, int *prot,
+        target_ulong *page_size)
+{
+    cpu_abort(env, "%s not supported yet\n", __func__);
+    return 0;
+}
+
 int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
                               int access_type, int mmu_idx)
 {
-    cpu_abort(env, "%s not supported yet\n", __func__);
-    return 1;
+    target_phys_addr_t phys_addr;
+    target_ulong page_size;
+    int prot;
+    int ret, is_user;
+
+    is_user = mmu_idx == MMU_USER_IDX;
+    ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
+                        &prot, &page_size);
+
+    if (ret == 0) {
+        /* Map a single page.  */
+        phys_addr &= TARGET_PAGE_MASK;
+        address &= TARGET_PAGE_MASK;
+        tlb_set_page(env, address, phys_addr, prot, mmu_idx, page_size);
+        return 0;
+    }
+
+    env->cp0.c3_faultstatus = ret;
+    env->cp0.c4_faultaddr = address;
+    if (access_type == 2) {
+        env->exception_index = UC64_EXCP_ITRAP;
+    } else {
+        env->exception_index = UC64_EXCP_DTRAP;
+    }
+    return ret;
 }
 
 target_phys_addr_t cpu_get_phys_page_debug(CPUUniCore64State *env,
