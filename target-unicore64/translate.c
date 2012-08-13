@@ -404,6 +404,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 t_op1_64, t_op2_64;
     TCGv_i32 t_op1_32, t_op2_32;
+    int logic_flag = false;
 
     ILLEGAL_INSN(UCOP_REG_D == 31);
 
@@ -447,6 +448,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn and */
             tcg_gen_and_i32(t_op2_32, t_op1_32, t_op2_32);
         }
+        logic_flag = true;
         break;
     case 0x01: /* insn xor dxor */
         if (UCOP_SET(22)) { /* insn dxor */
@@ -454,6 +456,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn xor */
             tcg_gen_xor_i32(t_op2_32, t_op1_32, t_op2_32);
         }
+        logic_flag = true;
         break;
     case 0x02: /* insn sub dsub */
         if (UCOP_SET(22)) { /* insn dsub */
@@ -502,6 +505,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn or */
             tcg_gen_or_i32(t_op2_32, t_op1_32, t_op2_32);
         }
+        logic_flag = true;
         break;
     case 0x0d: /* insn MOV DMOV */
         ILLEGAL_INSN(UCOP_REG_S1);
@@ -513,6 +517,7 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* insn andn */
             tcg_gen_andc_i32(t_op2_32, t_op1_32, t_op2_32);
         }
+        logic_flag = true;
         break;
     case 0x0f: /* insn NOT DNOT */
         ILLEGAL_INSN(UCOP_REG_S1);
@@ -534,14 +539,14 @@ static void do_datap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* Word */
             tcg_gen_extu_i32_i64(cpu_R[UCOP_REG_D], t_op2_32);
         }
+    }
 
-        /* Write flags logic */
-        if (UCOP_SET(23)) { /* S bit */
-            if (!UCOP_SET(22)) { /* word */
-                tcg_gen_ext_i32_i64(t_op2_64, t_op2_32); /* Signed extend */
-            }
-            gen_flags_logic(t_op2_64);
+    /* Write flags logic */
+    if (UCOP_SET(23) && logic_flag) { /* S bit */
+        if (!UCOP_SET(22)) { /* word */
+            tcg_gen_ext_i32_i64(t_op2_64, t_op2_32); /* Signed extend */
         }
+        gen_flags_logic(t_op2_64);
     }
 
     /* Free temp variables */
