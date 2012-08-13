@@ -45,6 +45,10 @@ typedef struct CPUUniCore64State {
     uint64_t ZF; /* Z set if zero.  */
     uint64_t NF; /* N is bit 31. All other bits are undefined.  */
 
+    /* Addr for LL-SC */
+    uint64_t exclusive_addr_ll;
+    uint64_t exclusive_addr_sc;
+
     /* System control coprocessor (cp0) */
     struct {
         uint64_t c0_cpuid;

@@ -26,6 +26,10 @@
 static TCGv_ptr cpu_env;
 static TCGv_i64 cpu_R[32];
 
+static TCGv_i64 ex_addr_LL; /* exclusive address for LL */
+static TCGv_i64 ex_addr_SC; /* exclusive address for SC */
+static bool LLbit;
+
 #include "gen-icount.h"
 
 static const char *regnames[] = {
@@ -45,6 +49,12 @@ void uc64_translate_init(void)
         cpu_R[i] = tcg_global_mem_new_i64(TCG_AREG0,
                            offsetof(CPUUniCore64State, regs[i]), regnames[i]);
     }
+
+    ex_addr_LL = tcg_global_mem_new_i64(TCG_AREG0,
+           offsetof(CPUUniCore64State, exclusive_addr_ll), "ex_addr_ll");
+    ex_addr_SC = tcg_global_mem_new_i64(TCG_AREG0,
+           offsetof(CPUUniCore64State, exclusive_addr_sc), "ex_addr_sc");
+    LLbit = false;
 
 #define GEN_HELPER 2
 #include "helper.h"
@@ -968,13 +978,11 @@ static void do_ldst(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     tcg_temp_free_i64(t_rd_64);
 }
 
-static void do_atomic(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+static void do_swap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 t_addr, t_op2_64;
 
-    /* ONLY insn SWAP handled at present */
-    ILLEGAL_INSN((insn & 0xff800000) != 0x81800000);
-
+    ILLEGAL_INSN(insn & 0x1e000000);
     ILLEGAL_INSN(UCOP_REG_D == 31);
     ILLEGAL_INSN(UCOP_REG_S2 == 31);
     ILLEGAL_INSN(UCOP_IMM_6);
@@ -1009,6 +1017,107 @@ static void do_atomic(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     tcg_temp_free_i64(t_addr);
     tcg_temp_free_i64(t_op2_64);
+}
+
+static void do_llsc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
+{
+    TCGv_i64 t_addr, t_op2_64, t_rd_64;
+    int fail_label;
+    int done_label;
+
+    ILLEGAL_INSN(UCOP_REG_D == 31);
+
+    t_addr = tcg_temp_new_i64();
+    t_op2_64 = tcg_temp_new_i64();
+    t_rd_64 = tcg_temp_new_i64();
+
+    /* Prepare base address */
+    if (UCOP_REG_S1 == 31) {
+        tcg_gen_movi_i64(t_addr, s->dc_pc);
+    } else {
+        tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+    }
+
+    /* Prepare op2 */
+    if (UCOP_SET(21)) { /* reg or imm */
+        tcg_gen_movi_i64(t_op2_64, UCOP_IMM11);
+    } else {
+        ILLEGAL_INSN(UCOP_REG_S2 == 31);
+        ILLEGAL_INSN(UCOP_IMM_6);
+
+        tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
+    }
+
+    if (UCOP_SET(27)) { /* pre */
+        if (UCOP_SET(28)) { /* add */
+            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
+        } else { /* sub */
+            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
+        }
+    }
+
+    if (UCOP_SET(25)) { /* ll */
+        if (UCOP_SET(22)) { /* double word */
+            tcg_gen_qemu_ld64(t_rd_64, t_addr, 1);
+        } else { /* word */
+            tcg_gen_qemu_ld32u(t_rd_64, t_addr, 1);
+        }
+
+        tcg_gen_mov_i64(ex_addr_LL, t_addr);
+        LLbit = true;
+    } else { /* SC */
+        if (LLbit) { /* SC && LLbit is true */
+            fail_label = gen_new_label();
+            done_label = gen_new_label();
+
+            tcg_gen_mov_i64(ex_addr_SC, t_addr);
+            tcg_gen_brcond_i64(TCG_COND_NE, t_addr, ex_addr_LL, fail_label);
+            /* Above tcg will destroy t_addr ??? */
+            tcg_gen_mov_i64(t_addr, ex_addr_SC);
+
+            tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
+            if (UCOP_SET(22)) { /* double word */
+                tcg_gen_qemu_st64(t_rd_64, t_addr, 1);
+            } else { /* word */
+                tcg_gen_qemu_st32(t_rd_64, t_addr, 1);
+            }
+
+            /* Now, t_rd_64 is used for LLbit */
+            tcg_gen_movi_i64(t_rd_64, true);
+            tcg_gen_br(done_label);
+
+            gen_set_label(fail_label);
+            tcg_gen_movi_i64(t_rd_64, false);
+
+            gen_set_label(done_label);
+        } else { /* SC && LLbit is false */
+            tcg_gen_movi_i64(t_rd_64, false);
+        }
+        LLbit = false;
+    }
+
+    if (!UCOP_SET(27)) { /* post */
+        ILLEGAL_INSN(!UCOP_SET(26)); /* post && !writeback is illegal */
+
+        if (UCOP_SET(28)) { /* add */
+            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
+        } else { /* sub */
+            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
+        }
+    }
+
+    if (!UCOP_SET(27) || UCOP_SET(26)) { /* post || writeback */
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_S1], t_addr);
+    }
+
+    /* Change the value of RD, in case rd == rs1 */
+    tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
+
+    tcg_temp_free_i64(t_addr);
+    tcg_temp_free_i64(t_op2_64);
+    tcg_temp_free_i64(t_rd_64);
 }
 
 static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
@@ -1146,9 +1255,20 @@ static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)
         break;
     case 0x3:
         do_ldst(env, s, insn);
+        LLbit = false;
         break;
     case 0x4:
-        do_atomic(env, s, insn);
+        switch ((insn >> 23) & 0x3) {
+        case 0x2:
+            do_llsc(env, s, insn);
+            break;
+        case 0x3:
+            do_swap(env, s, insn);
+            LLbit = false;
+            break;
+        default:
+            ILLEGAL_INSN(true);
+        }
         break;
     case 0x5:
         do_branch(env, s, insn);
