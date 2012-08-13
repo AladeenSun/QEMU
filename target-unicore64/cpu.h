@@ -48,6 +48,11 @@ typedef struct CPUUniCore64State {
     /* System control coprocessor (cp0) */
     struct {
         uint64_t c0_cpuid;
+        uint64_t c1_sys; /* System control register.  */
+        uint64_t c2_base; /* MMU translation table base.  */
+        uint64_t c3_faultstatus; /* Fault status registers.  */
+        uint64_t c4_faultaddr; /* Fault address registers.  */
+        uint64_t c9_excpaddr;
     } cp0;
 
     CPU_COMMON
