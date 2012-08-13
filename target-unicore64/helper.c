@@ -59,7 +59,7 @@ void HELPER(afr_write)(uint64_t x)
 {
     env->NF = x << 60;
     env->ZF = (~x) & AFR_Z;
-    env->CF = (x >> 1) & AFR_C;
+    env->CF = (x & AFR_C) >> 1;
     env->VF = x << 63;
 }
 
