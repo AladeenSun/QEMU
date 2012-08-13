@@ -16,6 +16,20 @@
 #error This file only exist under softmmu circumstance
 #endif
 
+#undef DEBUG_UC64
+
+#ifdef DEBUG_UC64
+#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
+#else
+#define DPRINTF(fmt, ...) do {} while (0)
+#endif
+
+#define SUPERPAGE_SIZE             (1 << 20)
+#define UC64_PAGETABLE_READ        (1 << 7)
+#define UC64_PAGETABLE_WRITE       (1 << 6)
+#define UC64_PAGETABLE_EXEC        (1 << 5)
+#define UC64_PAGETABLE_EXIST       (1 << 2)
+
 #define MMUSUFFIX _mmu
 
 #define SHIFT 0
