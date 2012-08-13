@@ -103,7 +103,7 @@ void do_interrupt(CPUUniCore64State *env)
         new_mode = ASR_MODE_PRIV;
         addr = UC64_EXCP_DTRAP;
         break;
-    case UC64_EXCP_INTR:
+    case UC64_INT_TIMER:
     default:
         cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
         return;
