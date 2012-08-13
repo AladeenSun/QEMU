@@ -123,8 +123,73 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
         int access_type, int is_user, target_phys_addr_t *phys_ptr, int *prot,
         target_ulong *page_size)
 {
-    cpu_abort(env, "%s not supported yet\n", __func__);
-    return 0;
+    int code;
+    uint64_t table;
+    uint64_t desc;
+    target_phys_addr_t phys_addr;
+
+    /* Pagetable walk.  */
+    /* Lookup l1 descriptor.  */
+    table = env->cp0.c2_base & 0xffffff000ULL;
+    table |= (address >> 27) & 0xff8;
+    desc = ldl_phys(table);
+    code = 0;
+    if (!(desc & UC64_PAGETABLE_EXIST)) {
+        code = 0x02; /* second pagetable miss */
+        goto do_fault;
+    }
+
+    /* Lookup l2 descriptor.  */
+    table = (desc & 0xffffff000ULL) | ((address >> 18) & 0xff8);
+    desc = ldl_phys(table);
+    switch (desc & 1) {
+    case 1:
+        /* Superpage  */
+        if (!(desc & UC64_PAGETABLE_EXIST)) {
+            code = 0x05; /* superpage miss */
+            goto do_fault;
+        }
+        phys_addr = (desc & 0xfffe00000ULL) | (address & 0x1fffff);
+        *page_size = SUPERPAGE_SIZE;
+        break;
+    case 0:
+        cpu_abort(env, "4k page type not supported yet!");
+    default:
+        cpu_abort(env, "wrong page type!");
+    }
+
+    *phys_ptr = phys_addr;
+    *prot = 0;
+    /* Check access permissions.  */
+    if (desc & UC64_PAGETABLE_READ) {
+        *prot |= PAGE_READ;
+    } else {
+        if (is_user && (access_type == 0)) {
+            code = 0x6; /* access unreadable area */
+            goto do_fault;
+        }
+    }
+
+    if (desc & UC64_PAGETABLE_WRITE) {
+        *prot |= PAGE_WRITE;
+    } else {
+        if (is_user && (access_type == 1)) {
+            code = 0x7; /* access unwritable area */
+            goto do_fault;
+        }
+    }
+
+    if (desc & UC64_PAGETABLE_EXEC) {
+        *prot |= PAGE_EXEC;
+    } else {
+        if (is_user && (access_type == 2)) {
+            code = 0x6; /* access unexecutable area */
+            goto do_fault;
+        }
+    }
+
+do_fault:
+    return code;
 }
 
 int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
@@ -136,8 +201,16 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
     int ret, is_user;
 
     is_user = mmu_idx == MMU_USER_IDX;
-    ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
-                        &prot, &page_size);
+    if ((env->cp0.c1_sys & 1) == 0) {
+        /* MMU disabled.  */
+        phys_addr = address;
+        prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+        page_size = TARGET_PAGE_SIZE;
+        ret = 0;
+    } else {
+        ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
+                            &prot, &page_size);
+    }
 
     if (ret == 0) {
         /* Map a single page.  */
