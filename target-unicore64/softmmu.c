@@ -109,12 +109,12 @@ void do_interrupt(CPUUniCore64State *env)
         return;
     }
     /* Get exception virtual base address , only least 39 bits available */
-    addr += (env->cp0.c9_excpaddr & 0x7fffffffffULL);
+    addr += (env->cp0.c9_excpbase & 0x7fffffffffULL);
 
     env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | new_mode;
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */
-    env->regs[30] = env->regs[31];
+    env->cp0.c4_excpaddr = env->regs[31];
     env->regs[31] = addr;
     env->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }

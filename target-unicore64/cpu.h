@@ -52,7 +52,8 @@ typedef struct CPUUniCore64State {
         uint64_t c2_base; /* MMU translation table base.  */
         uint64_t c3_faultstatus; /* Fault status registers.  */
         uint64_t c4_faultaddr; /* Fault address registers.  */
-        uint64_t c9_excpaddr;
+        uint64_t c4_excpaddr; /* Exception address register.*/
+        uint64_t c9_excpbase; /* Exception base register. */
     } cp0;
 
     CPU_COMMON
