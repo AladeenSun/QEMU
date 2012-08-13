@@ -189,6 +189,15 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
     }
 
 do_fault:
+    if (code) {
+        env->cp0.c3_faultstatus = code;
+        env->cp0.c4_faultaddr = address;
+        if (access_type == 2) {
+            env->exception_index = UC64_EXCP_ITRAP;
+        } else {
+            env->exception_index = UC64_EXCP_DTRAP;
+        }
+    }
     return code;
 }
 
@@ -217,16 +226,8 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
         phys_addr &= TARGET_PAGE_MASK;
         address &= TARGET_PAGE_MASK;
         tlb_set_page(env, address, phys_addr, prot, mmu_idx, page_size);
-        return 0;
     }
 
-    env->cp0.c3_faultstatus = ret;
-    env->cp0.c4_faultaddr = address;
-    if (access_type == 2) {
-        env->exception_index = UC64_EXCP_ITRAP;
-    } else {
-        env->exception_index = UC64_EXCP_DTRAP;
-    }
     return ret;
 }
 
