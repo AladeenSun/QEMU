@@ -1020,7 +1020,8 @@ void cpu_loop(CPUUniCore64State *env)
                     env->regs[0], env->regs[1], env->regs[2],
                     env->regs[3], env->regs[4], env->regs[5], 0, 0);
             break;
-        case EXCP_INTERRUPT:
+        case UC64_EXCP_DTRAP:
+        case UC64_EXCP_ITRAP:
             goto error; /* FIXME */
             break;
         default:
