@@ -78,59 +78,46 @@ void tlb_fill(CPUUniCore64State *env1, target_ulong addr, int is_write,
     env = saved_env;
 }
 
-/* Map CPU modes onto saved register banks */
-static inline int bank_number(int mode)
-{
-    switch (mode) {
-    case ASR_MODE_USER:
-        return 0;
-    case ASR_MODE_PRIV:
-        return 1;
-    case ASR_MODE_DEBUG:
-        return 2;
-    }
-    cpu_abort(cpu_single_env, "Bad mode %x\n", mode);
-    return -1;
-}
-
 void switch_mode(CPUUniCore64State *env, int mode)
 {
     int old_mode;
-    int bank_num;
+    int old_mode_idx;
+    int mode_idx;
 
     old_mode = env->uncached_asr & ASR_MODE_SELECT;
-    if (mode == old_mode) {
+    old_mode_idx = (old_mode == ASR_MODE_PRIV) ?
+                    ASR_IDX_PRIV : ASR_IDX_USER;
+    mode_idx = (mode == ASR_MODE_PRIV) ?
+                    ASR_IDX_PRIV : ASR_IDX_USER;
+    if (mode_idx == old_mode_idx) {
         return;
     }
-    bank_num = bank_number(old_mode);
-    env->banked_r29[bank_num] = env->regs[29];
-    env->banked_bsr[bank_num] = env->uncached_asr;
-    env->banked_bfr[bank_num] = env->uncached_afr;
 
-    bank_num = bank_number(mode);
-    env->regs[29] = env->banked_r29[bank_num];
-    env->uncached_asr = env->banked_bsr[bank_num];
-    env->uncached_afr = env->banked_bfr[bank_num];
+    env->banked_r29[old_mode_idx] = env->regs[29];
+    env->banked_r30[old_mode_idx] = env->regs[30];
+    env->banked_bsr[old_mode_idx] = env->uncached_asr;
+    env->banked_bfr[old_mode_idx] = env->uncached_afr;
+
+    env->regs[29] = env->banked_r29[mode_idx];
+    env->regs[30] = env->banked_r30[mode_idx];
+    env->uncached_asr = env->banked_bsr[mode_idx];
+    env->uncached_afr = env->banked_bfr[mode_idx];
 }
 
 void do_interrupt(CPUUniCore64State *env)
 {
     uint64_t addr;
-    int new_mode;
 
     switch (env->exception_index) {
     case UC64_EXCP_PRIV:
-        new_mode = ASR_MODE_PRIV;
         addr = UC64_EXCP_PRIV;
         break;
     case UC64_EXCP_ITRAP:
         DPRINTF("itrap happend at %x\n", env->regs[31]);
-        new_mode = ASR_MODE_PRIV;
         addr = UC64_EXCP_ITRAP;
         break;
     case UC64_EXCP_DTRAP:
         DPRINTF("dtrap happend at %x\n", env->regs[31]);
-        new_mode = ASR_MODE_PRIV;
         addr = UC64_EXCP_DTRAP;
         break;
     case UC64_INT_TIMER:
@@ -141,8 +128,8 @@ void do_interrupt(CPUUniCore64State *env)
     /* Get exception virtual base address, only least 39 bits available */
     addr += (env->cp0.c9_excpbase & 0x7fffffffffULL);
 
-    switch_mode(env, new_mode);
-    env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | new_mode;
+    switch_mode(env, ASR_MODE_PRIV);
+    env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | ASR_MODE_PRIV;
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */
     env->cp0.c4_itrapaddr = env->regs[31];

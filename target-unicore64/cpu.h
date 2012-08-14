@@ -41,6 +41,7 @@ typedef struct CPUUniCore64State {
 
     /* Banked registers. */
     uint64_t banked_r29[3];
+    uint64_t banked_r30[3];
     uint64_t banked_bsr[3];
     uint64_t banked_bfr[3];
 
