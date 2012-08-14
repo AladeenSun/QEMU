@@ -233,6 +233,54 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
     return 0;
 }
 
+void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
+        uint64_t cop)
+{
+#ifdef CONFIG_USER_ONLY
+    cpu_abort(env, "NO priviledged instructions in user mode\n");
+#endif
+    /*
+     * movc pp.nn, rs, #imm9
+     *      rs: UCOP_REG_D
+     *      nn: UCOP_REG_S1
+     *          1: sys control reg
+     *          6: dcache management reg
+     *          7: icache management reg
+     */
+    switch (creg) {
+    case 1:
+        if (cop != 0) {
+            goto unrecognized;
+        }
+        env->cp0.c1_sys = val;
+        break;
+    case 6:
+        switch (cop) {
+        case 8:
+            env->cp0.c6_dcache = val;
+            break;
+        default:
+            goto unrecognized;
+        }
+        break;
+    case 7:
+        switch (cop) {
+        case 0:
+            env->cp0.c7_icache = val;
+            break;
+        default:
+            goto unrecognized;
+        }
+        break;
+    default:
+        goto unrecognized;
+    }
+    return;
+unrecognized:
+    DPRINTF("Wrong register (%" PRIx64 ") or wrong operation (%" PRIx64
+            ") in %s!\n", creg, cop, __func__);
+}
+
 #ifdef CONFIG_USER_ONLY
 void switch_mode(CPUUniCore64State *env, int mode)
 {
