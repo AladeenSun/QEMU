@@ -1187,23 +1187,22 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     switch (UCOP_CPNUM) {
     case 0: /* cp0 */
         ILLEGAL_INSN(UCOP_REG_D == 31);
-        if ((insn & 0xfe000003) == 0xc0000000) {
-            t_creg_64 = tcg_temp_new_i64();
-            t_cop_64 = tcg_temp_new_i64();
-            tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
-            tcg_gen_movi_i64(t_cop_64, UCOP_IMM_9);
-            if (UCOP_SET(25)) { /* load */
-                gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
-                tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_creg_64);
-            } else { /* store */
-                tcg_gen_movi_i64(t_creg_64, UCOP_REG_D);
-                gen_helper_cp0_set(cpu_env, cpu_R[UCOP_REG_S1],
-                                   t_creg_64, t_cop_64);
-            }
-            tcg_temp_free(t_creg_64);
-            tcg_temp_free(t_cop_64);
-            return;
+        ILLEGAL_INSN((insn & 0xfc000003) != 0xc0000000);
+
+        t_creg_64 = tcg_temp_new_i64();
+        t_cop_64 = tcg_temp_new_i64();
+        tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
+        tcg_gen_movi_i64(t_cop_64, UCOP_IMM_9);
+        if (UCOP_SET(25)) { /* load */
+            gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
+            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_creg_64);
+        } else { /* store */
+            tcg_gen_movi_i64(t_creg_64, UCOP_REG_D);
+            gen_helper_cp0_set(cpu_env, cpu_R[UCOP_REG_S1],
+                               t_creg_64, t_cop_64);
         }
+        tcg_temp_free(t_creg_64);
+        tcg_temp_free(t_cop_64);
         break;
     case 1: /* fake ocd */
         /* ONLY handle movc p1.cd, rs1, #0 */
