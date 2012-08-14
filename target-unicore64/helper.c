@@ -279,12 +279,9 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
         }
         break;
     case 12:
-        switch (cop) {
-        case 6:
-        case 7:
+        if (cop < 8) {
             env->cp0.c12_sysu[cop] = val;
-            break;
-        default:
+        } else {
             goto unrecognized;
         }
         break;
