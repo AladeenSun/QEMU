@@ -259,6 +259,19 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
             return env->cp0.c3_dfaultstatus;
         }
         break;
+    case 4:
+        switch (cop) {
+        case 0:
+            return env->cp0.c4_faultaddr;
+        case 1:
+            return env->cp0.c4_itrapaddr;
+        }
+        break;
+    case 8:
+        if (cop < 16) {
+            return env->cp0.c8_mrar[cop];
+        }
+        break;
     case 12:
         if (cop < 8) {
             return env->cp0.c12_sysu[cop];

@@ -65,6 +65,7 @@ typedef struct CPUUniCore64State {
         uint64_t c4_itrapaddr; /* Exception address register.*/
         uint64_t c6_dcache; /* Dcache management register */
         uint64_t c7_icache; /* Icache management register */
+        uint64_t c8_mrar[16]; /* Memory region configuration registers */
         uint64_t c9_excpbase; /* Exception base register. */
         uint64_t c12_sysu[8]; /* SysU registers. */
     } cp0;
