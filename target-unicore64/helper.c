@@ -8,7 +8,7 @@
 #include "helper.h"
 #include "host-utils.h"
 
-#undef DEBUG_UC64
+#define DEBUG_UC64
 
 #ifdef DEBUG_UC64
 #define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
@@ -226,6 +226,31 @@ uint64_t HELPER(adc_cc_i64)(uint64_t a, uint64_t b)
     env->VF = ((a ^ b ^ -1) & (a ^ result));
     env->NF = env->ZF = result;
     return result;
+}
+
+uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
+        uint64_t cop)
+{
+#ifdef CONFIG_USER_ONLY
+    cpu_abort(env, "NO priviledged instructions in user mode\n");
+#endif
+    /*
+     * movc rd, pp.nn, #imm9
+     *      rd: UCOP_REG_D
+     *      nn: UCOP_REG_S1
+     *          0 : cpuid
+     */
+    switch (creg) {
+    case 0:
+        switch (cop) {
+        case 0:
+            return env->cp0.c0_cpuid;
+        }
+        break;
+    }
+    DPRINTF("Wrong register (%" PRIx64 ") or wrong operation (%" PRIx64
+            ") in %s!\n", creg, cop, __func__);
+    return 0;
 }
 
 #ifdef CONFIG_USER_ONLY

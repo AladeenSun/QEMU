@@ -76,6 +76,7 @@ void uc64_translate_init(void)
 #define UCOP_SHIFT              (((insn) >> 24) & 0x03)
 #define UCOP_IMM11              (((insn) >>  0) & 0x7ff)
 #define UCOP_IMM_6              (((insn) >>  0) & 0x3f)
+#define UCOP_IMM_9              (((insn) >>  2) & 0x1ff)
 #define UCOP_CPNUM              (((insn) >> 21) & 0xf)
 #define UCOP_LDST_BHD           (((insn) >> 22) & 0x7)
 #define UCOP_CMOV_COND          (((insn) >> 12) & 0xf)
@@ -1178,9 +1179,27 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    TCGv_i64 t_creg_64;
+    TCGv_i64 t_creg_64, t_cop_64;
 
     switch (UCOP_CPNUM) {
+    case 0: /* cp0 */
+        ILLEGAL_INSN(UCOP_REG_D == 31);
+        if ((insn & 0xfe000003) == 0xc0000000) {
+            t_creg_64 = tcg_temp_new_i64();
+            t_cop_64 = tcg_temp_new_i64();
+            tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
+            tcg_gen_movi_i64(t_cop_64, UCOP_IMM_9);
+            if (UCOP_SET(25)) { /* load */
+                gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
+                tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_creg_64);
+            } else { /* store */
+                ILLEGAL_INSN(true);
+            }
+            tcg_temp_free(t_creg_64);
+            tcg_temp_free(t_cop_64);
+            return;
+        }
+        break;
     case 1: /* fake ocd */
         /* ONLY handle movc p1.cd, rs1, #0 */
         ILLEGAL_INSN((insn & 0xfe0007ff) != 0xc0000000);
