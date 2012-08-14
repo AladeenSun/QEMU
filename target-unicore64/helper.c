@@ -37,6 +37,16 @@ CPUUniCore64State *uc64_cpu_init(const char *cpu_model)
     return env;
 }
 
+void helper_ocd_output(void)
+{
+    if (env->cp0.c12_sysu[6]) { /* 1 */
+        printf("%c", (unsigned char)env->cp0.c12_sysu[7]);
+    } else { /* 0 */
+        printf("\n--%16" PRIx64 "--", env->cp0.c12_sysu[7]);
+    }
+    fflush(NULL);
+}
+
 void helper_cp1_putc(target_ulong x)
 {
     printf("%c", (unsigned char)x); /* Output to stdout */

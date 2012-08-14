@@ -1243,9 +1243,14 @@ static void do_exception(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_temp_free_i32(tmp);
 
         s->dc_jmp = DISAS_TB_JUMP;
-    } else {
-        ILLEGAL_INSN(true);
+        return;
     }
+
+    if ((insn & 0xff000000) == 0xee000000) { /* BKPT */
+        gen_helper_ocd_output();
+        return;
+    }
+    ILLEGAL_INSN(true);
 }
 
 static void disas_uc64_insn(CPUUniCore64State *env, DisasContext *s)

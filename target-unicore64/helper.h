@@ -10,6 +10,7 @@
 
 DEF_HELPER_1(cp1_putc, void, i64)
 DEF_HELPER_1(cp1_putx, void, i64)
+DEF_HELPER_0(ocd_output, void)
 DEF_HELPER_3(cp0_get, i64, env, i64, i64)
 DEF_HELPER_4(cp0_set, void, env, i64, i64, i64)
 
