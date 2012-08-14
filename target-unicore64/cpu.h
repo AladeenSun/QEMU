@@ -68,10 +68,13 @@ typedef struct CPUUniCore64State {
 
 } CPUUniCore64State;
 
-#define ASR_MODE_SELECT         (0x7)
-#define ASR_MODE_USER           (1 << 0)
-#define ASR_MODE_PRIV           (1 << 1)
-#define ASR_MODE_DEBUG          (1 << 2)
+#define ASR_IDX_USER            (0)
+#define ASR_IDX_PRIV            (1)
+#define ASR_IDX_DEBUG           (2)
+#define ASR_MODE_SELECT         (ASR_MODE_USER | ASR_MODE_PRIV | ASR_MODE_DEBUG)
+#define ASR_MODE_USER           (1 << ASR_IDX_USER)
+#define ASR_MODE_PRIV           (1 << ASR_IDX_PRIV)
+#define ASR_MODE_DEBUG          (1 << ASR_IDX_DEBUG)
 #define ASR_INTR_SELECT         (0x3f << 5)
 #define AFR_V                   (1 << 0)
 #define AFR_C                   (1 << 1)
