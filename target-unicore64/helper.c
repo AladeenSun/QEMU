@@ -243,6 +243,11 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
             return env->cp0.c1_sys;
         }
         break;
+    case 12:
+        if (cop < 8) {
+            return env->cp0.c12_sysu[cop];
+        }
+        break;
     }
     DPRINTF("Wrong register (%" PRIx64 ") or wrong operation (%" PRIx64
             ") in %s!\n", creg, cop, __func__);
