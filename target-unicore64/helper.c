@@ -227,6 +227,12 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
             return env->cp0.c0_cpuid;
         }
         break;
+    case 1:
+        switch (cop) {
+        case 0:
+            return env->cp0.c1_sys;
+        }
+        break;
     }
     DPRINTF("Wrong register (%" PRIx64 ") or wrong operation (%" PRIx64
             ") in %s!\n", creg, cop, __func__);
@@ -267,6 +273,16 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
         switch (cop) {
         case 0:
             env->cp0.c7_icache = val;
+            break;
+        default:
+            goto unrecognized;
+        }
+        break;
+    case 12:
+        switch (cop) {
+        case 6:
+        case 7:
+            env->cp0.c12_sysu[cop] = val;
             break;
         default:
             goto unrecognized;
