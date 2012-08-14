@@ -1039,21 +1039,25 @@ static void do_swap(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
 static void do_llsc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
-    TCGv_i64 t_addr, t_op2_64, t_rd_64;
+    TCGv_i64 t_addr, t_baseaddr, t_op2_64, t_rd_64;
     int fail_label;
     int done_label;
 
     ILLEGAL_INSN(UCOP_REG_D == 31);
 
+    /* post && !writeback is illegal */
+    ILLEGAL_INSN(!UCOP_SET(27) && !UCOP_SET(26));
+
     t_addr = tcg_temp_new_i64();
+    t_baseaddr = tcg_temp_new_i64();
     t_op2_64 = tcg_temp_new_i64();
     t_rd_64 = tcg_temp_new_i64();
 
     /* Prepare base address */
     if (UCOP_REG_S1 == 31) {
-        tcg_gen_movi_i64(t_addr, s->dc_pc);
+        tcg_gen_movi_i64(t_baseaddr, s->dc_pc);
     } else {
-        tcg_gen_mov_i64(t_addr, cpu_R[UCOP_REG_S1]);
+        tcg_gen_mov_i64(t_baseaddr, cpu_R[UCOP_REG_S1]);
     }
 
     /* Prepare op2 */
@@ -1066,19 +1070,29 @@ static void do_llsc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         tcg_gen_mov_i64(t_op2_64, cpu_R[UCOP_REG_S2]);
     }
 
-    if (UCOP_SET(27)) { /* pre */
-        if (UCOP_SET(28)) { /* add */
-            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
-        } else { /* sub */
-            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
-        }
+    /* calculate addr */
+    if (UCOP_SET(28)) { /* add */
+        tcg_gen_add_i64(t_addr, t_baseaddr, t_op2_64);
+    } else { /* sub */
+        tcg_gen_sub_i64(t_addr, t_baseaddr, t_op2_64);
+    }
+
+    /* write back addr while post || writeback*/
+    if (!UCOP_SET(27) || UCOP_SET(26)) {
+        ILLEGAL_INSN(UCOP_REG_S1 == 31);
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_S1], t_addr);
+    }
+
+    /* t_addr = t_baseaddr while post */
+    if (!UCOP_SET(27)) {
+        tcg_gen_mov_i64(t_addr, t_baseaddr);
     }
 
     if (UCOP_SET(25)) { /* ll */
         if (UCOP_SET(22)) { /* double word */
-            tcg_gen_qemu_ld64(t_rd_64, t_addr, 1);
+            tcg_gen_qemu_ld64(cpu_R[UCOP_REG_D], t_addr, 1);
         } else { /* word */
-            tcg_gen_qemu_ld32u(t_rd_64, t_addr, 1);
+            tcg_gen_qemu_ld32u(cpu_R[UCOP_REG_D], t_addr, 1);
         }
 
         tcg_gen_mov_i64(ex_addr_LL, t_addr);
@@ -1089,7 +1103,6 @@ static void do_llsc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             done_label = gen_new_label();
 
             tcg_gen_brcond_i64(TCG_COND_NE, t_addr, ex_addr_LL, fail_label);
-            /* Above tcg will destroy t_addr ??? */
 
             tcg_gen_mov_i64(t_rd_64, cpu_R[UCOP_REG_D]);
             if (UCOP_SET(22)) { /* double word */
@@ -1099,39 +1112,21 @@ static void do_llsc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             }
 
             /* Now, t_rd_64 is used for LLbit */
-            tcg_gen_movi_i64(t_rd_64, true);
+            tcg_gen_movi_i64(cpu_R[UCOP_REG_D], true);
             tcg_gen_br(done_label);
 
             gen_set_label(fail_label);
-            tcg_gen_movi_i64(t_rd_64, false);
+            tcg_gen_movi_i64(cpu_R[UCOP_REG_D], false);
 
             gen_set_label(done_label);
         } else { /* SC && LLbit is false */
-            tcg_gen_movi_i64(t_rd_64, false);
+            tcg_gen_movi_i64(cpu_R[UCOP_REG_D], false);
         }
         LLbit = false;
     }
 
-    if (!UCOP_SET(27)) { /* post */
-        ILLEGAL_INSN(!UCOP_SET(26)); /* post && !writeback is illegal */
-
-        if (UCOP_SET(28)) { /* add */
-            tcg_gen_add_i64(t_addr, t_addr, t_op2_64);
-        } else { /* sub */
-            tcg_gen_sub_i64(t_addr, t_addr, t_op2_64);
-        }
-    }
-
-    if (!UCOP_SET(27) || UCOP_SET(26)) { /* post || writeback */
-        ILLEGAL_INSN(UCOP_REG_S1 == 31);
-
-        tcg_gen_mov_i64(cpu_R[UCOP_REG_S1], t_addr);
-    }
-
-    /* Change the value of RD, in case rd == rs1 */
-    tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_rd_64);
-
     tcg_temp_free_i64(t_addr);
+    tcg_temp_free_i64(t_baseaddr);
     tcg_temp_free_i64(t_op2_64);
     tcg_temp_free_i64(t_rd_64);
 }
