@@ -96,6 +96,9 @@ typedef struct DisasContext {
 #define gen_load_cpu_field(t_op_64, name)               \
     tcg_gen_ld_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
+#define gen_store_cpu_field(t_op_64, name)               \
+    tcg_gen_st_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
+
 /* Set flags from result.  */
 static inline void gen_flags_logic(TCGv_i64 var_rd)
 {
@@ -736,7 +739,7 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         if (UCOP_SET(26)) { /* C bit: insn mov afr, imm*/
             gen_helper_afr_write(t_flag_64);
         } else {/* insn mov bfr, imm */
-            gen_helper_bfr_write(t_flag_64);
+            gen_store_cpu_field(t_flag_64, bfr);
         }
 
         tcg_temp_free_i64(t_flag_64);
@@ -749,13 +752,13 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
         switch ((insn >> 26) & 0x3) {
         case 0: /* !F && !C : bsr */
-            gen_helper_bsr_write(t_flag_64);
+            gen_store_cpu_field(t_flag_64, bsr);
             break;
         case 1: /* !F &&  C : asr */
             gen_helper_asr_write(t_flag_64);
             break;
         case 2: /*  F && !C : bfr */
-            gen_helper_bfr_write(t_flag_64);
+            gen_store_cpu_field(t_flag_64, bfr);
             break;
         case 3: /*  F &&  C : afr */
             gen_helper_afr_write(t_flag_64);
@@ -769,13 +772,13 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
         switch ((insn >> 26) & 0x3) {
         case 0: /* !F && !C : bsr */
-            gen_helper_bsr_read(t_flag_64);
+            gen_load_cpu_field(t_flag_64, bsr);
             break;
         case 1: /* !F &&  C : asr */
             gen_helper_asr_read(t_flag_64);
             break;
         case 2: /*  F && !C : bfr */
-            gen_helper_bfr_read(t_flag_64);
+            gen_load_cpu_field(t_flag_64, bfr);
             break;
         case 3: /*  F &&  C : afr */
             gen_helper_afr_read(t_flag_64);
