@@ -52,7 +52,6 @@ typedef struct CPUUniCore64State {
 
     /* Addr for LL-SC */
     uint64_t exclusive_addr_ll;
-    uint64_t exclusive_addr_sc;
 
     /* System control coprocessor (cp0) */
     struct {
