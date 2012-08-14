@@ -235,12 +235,28 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
         switch (cop) {
         case 0:
             return env->cp0.c0_cpuid;
+        case 1:
+            return env->cp0.c1_sys;
         }
         break;
     case 1:
         switch (cop) {
         case 0:
             return env->cp0.c1_sys;
+        }
+        break;
+    case 2:
+        switch (cop) {
+        case 0:
+            return env->cp0.c2_base;
+        }
+        break;
+    case 3:
+        switch (cop) {
+        case 0:
+            return env->cp0.c3_ifaultstatus;
+        case 1:
+            return env->cp0.c3_dfaultstatus;
         }
         break;
     case 12:
@@ -275,11 +291,29 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
         }
         env->cp0.c1_sys = val;
         break;
+    case 2:
+        if (cop != 0) {
+            goto unrecognized;
+        }
+        env->cp0.c2_base = val;
+        break;
+    case 5:
+        switch (cop) {
+        case 0x18:
+            DPRINTF("Invalidate ITLB with ASID\n");
+            return;
+        default:
+            goto unrecognized;
+        }
+        break;
     case 6:
         switch (cop) {
-        case 8:
-            env->cp0.c6_dcache = val;
-            break;
+        case 0x8:
+            DPRINTF("Invalidate Entire L1 DCache\n");
+            return;
+        case 0xc:
+            DPRINTF("Flush Entire L1 DCache\n");
+            return;
         default:
             goto unrecognized;
         }

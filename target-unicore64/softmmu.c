@@ -208,11 +208,12 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
 
 do_fault:
     if (code) {
-        env->cp0.c3_faultstatus = code;
-        env->cp0.c4_faultaddr = address;
         if (access_type == 2) {
+            env->cp0.c3_ifaultstatus = code;
             env->exception_index = UC64_EXCP_ITRAP;
         } else {
+            env->cp0.c3_dfaultstatus = code;
+            env->cp0.c4_faultaddr = address;
             env->exception_index = UC64_EXCP_DTRAP;
         }
     }

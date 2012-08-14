@@ -59,7 +59,8 @@ typedef struct CPUUniCore64State {
         uint64_t c0_cpuid;
         uint64_t c1_sys; /* System control register.  */
         uint64_t c2_base; /* MMU translation table base.  */
-        uint64_t c3_faultstatus; /* Fault status registers.  */
+        uint64_t c3_ifaultstatus; /* Instruction fault status register.  */
+        uint64_t c3_dfaultstatus; /* Data fault status register.  */
         uint64_t c4_faultaddr; /* Fault address registers.  */
         uint64_t c4_itrapaddr; /* Exception address register.*/
         uint64_t c6_dcache; /* Dcache management register */
