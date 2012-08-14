@@ -55,6 +55,35 @@ void HELPER(exception)(uint32_t excp)
     cpu_loop_exit(env);
 }
 
+void HELPER(bsr_write)(uint64_t x)
+{
+    env->bsr = x & 0x7ff;
+}
+
+void HELPER(bfr_write)(uint64_t x)
+{
+    env->bfr = x & 0xf;
+}
+
+uint64_t HELPER(bfr_read)(void)
+{
+    return env->bfr;
+}
+
+uint64_t HELPER(bsr_read)(void)
+{
+    return env->bsr;
+}
+
+void HELPER(asr_write)(uint64_t x)
+{
+    uint64_t mod = x & ASR_MODE_SELECT;
+    if (env->uncached_asr ^ mod) {
+        switch_mode(env, mod);
+    }
+    env->uncached_asr = x & 0x7ff;
+}
+
 void HELPER(afr_write)(uint64_t x)
 {
     env->NF = x << 60;
@@ -67,6 +96,11 @@ uint64_t HELPER(afr_read)(void)
 {
     return (((env->NF >> 63) << 3) | ((env->ZF == 0) << 2) |
         (env->CF << 1) | (env->VF >> 63));
+}
+
+uint64_t HELPER(asr_read)(void)
+{
+    return env->uncached_asr;
 }
 
 uint32_t HELPER(clo_i32)(uint32_t x)

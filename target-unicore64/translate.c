@@ -733,40 +733,57 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
     t_flag_64 = tcg_temp_new_i64();
 
-    if ((insn & 0xfbfffff0) == 0x38200000) { /* insn mov afr, imm */
+    if ((insn & 0xfbfffff0) == 0x38200000) { /* insn mov afr/bfr, imm */
         tcg_gen_movi_i64(t_flag_64, (uint64_t)insn & 0xf);
-        if (UCOP_SET(26)) { /* C bit*/
+        if (UCOP_SET(26)) { /* C bit: insn mov afr, imm*/
             gen_helper_afr_write(t_flag_64);
-        } else {
-            ILLEGAL_INSN(true);
+        } else {/* insn mov bfr, imm */
+            gen_helper_bfr_write(t_flag_64);
         }
 
         tcg_temp_free_i64(t_flag_64);
         return;
     }
-    if ((insn & 0xf3ff07ff) == 0x30000000) { /* insn mov afr, rs1 */
+    if ((insn & 0xf3ff07ff) == 0x30000000) { /* mov reg to STATUS/FLAG */
         ILLEGAL_INSN(UCOP_REG_S1 == 31);
 
         tcg_gen_mov_i64(t_flag_64, cpu_R[UCOP_REG_S1]);
-        if (UCOP_SET(27) && UCOP_SET(26)) { /* F bit C bit */
+
+        switch ((insn >> 26) & 0x3) {
+        case 0: /* !F && !C : bsr */
+            gen_helper_bsr_write(t_flag_64);
+            break;
+        case 1: /* !F &&  C : asr */
+            gen_helper_asr_write(t_flag_64);
+            break;
+        case 2: /*  F && !C : bfr */
+            gen_helper_bfr_write(t_flag_64);
+            break;
+        case 3: /*  F &&  C : afr */
             gen_helper_afr_write(t_flag_64);
-        } else {
-            ILLEGAL_INSN(true);
         }
 
         tcg_temp_free_i64(t_flag_64);
         return;
     }
-    if ((insn & 0xf3e0ffff) == 0x20000000) { /* insn mov rd, afr */
+    if ((insn & 0xf3e0ffff) == 0x20000000) { /* mov STATUS/FLAG to reg */
         ILLEGAL_INSN(UCOP_REG_D == 31);
 
-        if (UCOP_SET(27) && UCOP_SET(26)) { /* F bit C bit */
+        switch ((insn >> 26) & 0x3) {
+        case 0: /* !F && !C : bsr */
+            gen_helper_bsr_read(t_flag_64);
+            break;
+        case 1: /* !F &&  C : asr */
+            gen_helper_asr_read(t_flag_64);
+            break;
+        case 2: /*  F && !C : bfr */
+            gen_helper_bfr_read(t_flag_64);
+            break;
+        case 3: /*  F &&  C : afr */
             gen_helper_afr_read(t_flag_64);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_flag_64);
-        } else {
-            ILLEGAL_INSN(true);
         }
 
+        tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_flag_64);
         tcg_temp_free_i64(t_flag_64);
         return;
     }
