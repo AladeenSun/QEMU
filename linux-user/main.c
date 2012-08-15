@@ -1024,6 +1024,9 @@ void cpu_loop(CPUUniCore64State *env)
         case UC64_EXCP_ITRAP:
             goto error; /* FIXME */
             break;
+        case EXCP_INTERRUPT:
+            /* just indicate that signals should be handled asap */
+            break;
         default:
             goto error;
         }
