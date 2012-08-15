@@ -456,6 +456,7 @@ int cpu_exec(CPUArchState *env)
 #elif defined(TARGET_UNICORE64)
                     if (interrupt_request & CPU_INTERRUPT_HARD
                         && !(env->uncached_asr & ASR_INTR_SELECT)) {
+                        env->exception_index = UC64_INTR_ITIMER;
                         do_interrupt(env);
                         next_tb = 0;
                     }

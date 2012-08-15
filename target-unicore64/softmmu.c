@@ -120,7 +120,7 @@ void do_interrupt(CPUUniCore64State *env)
         DPRINTF("dtrap happend at %x\n", env->regs[31]);
         addr = UC64_EXCP_DTRAP;
         break;
-    case UC64_INT_TIMER:
+    case UC64_INTR_ITIMER:
     default:
         cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
         return;
