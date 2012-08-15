@@ -353,7 +353,7 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
     case 7:
         switch (cop) {
         case 0:
-            env->cp0.c7_icache = val;
+            DPRINTF("Invalidate Entire ICache\n");
             break;
         default:
             goto unrecognized;
