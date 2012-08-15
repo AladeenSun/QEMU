@@ -20,6 +20,7 @@ static void uc64_unicore3_cpu_initfn(Object *obj)
     CPUUniCore64State *env = &cpu->env;
 
     env->cp0.c0_cpuid = 0x4d110863;
+    env->cp0.c0_cachetype = 0x0519a19a;
     env->uncached_asr = ASR_MODE_PRIV;
     env->regs[31] = 0x03000000;
 }

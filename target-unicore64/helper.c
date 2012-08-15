@@ -224,7 +224,9 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
 #ifdef CONFIG_USER_ONLY
     cpu_abort(env, "NO priviledged instructions in user mode\n");
 #endif
-    DPRINTF("%s: creg %" PRIx64 " cop%" PRIx64 "\n", __func__, creg, cop);
+    if (creg != 12) {
+        DPRINTF("%s: creg %" PRIx64 " cop%" PRIx64 "\n", __func__, creg, cop);
+    }
     /*
      * movc rd, pp.nn, #imm9
      *      rd: UCOP_REG_D
@@ -237,7 +239,7 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
         case 0:
             return env->cp0.c0_cpuid;
         case 1:
-            return env->cp0.c1_sys;
+            return env->cp0.c0_cachetype;
         }
         break;
     case 1:
@@ -307,7 +309,9 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
 #ifdef CONFIG_USER_ONLY
     cpu_abort(env, "NO priviledged instructions in user mode\n");
 #endif
-    DPRINTF("%s: creg %" PRIx64 " cop%" PRIx64 "\n", __func__, creg, cop);
+    if (creg != 12) {
+        DPRINTF("%s: creg %" PRIx64 " cop%" PRIx64 "\n", __func__, creg, cop);
+    }
     /*
      * movc pp.nn, rs, #imm9
      *      rs: UCOP_REG_D
