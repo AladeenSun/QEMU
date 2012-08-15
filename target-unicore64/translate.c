@@ -1157,9 +1157,9 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
                 s->dc_jmp = DISAS_JUMP;
                 break;
             case 0x00c00000:
-                /* ERET instruction: r31 <- p0.c4_itrapaddr, ASR <- BSR */
+                /* ERET instruction: r31 <- p0.c4_epc, ASR <- BSR */
                 tmp = tcg_temp_new_i64();
-                gen_load_cpu_field(cpu_R[31], cp0.c4_itrapaddr);
+                gen_load_cpu_field(cpu_R[31], cp0.c4_epc);
                 gen_load_cpu_field(tmp, bsr);
                 gen_helper_asr_write(tmp);
                 gen_load_cpu_field(tmp, bfr);

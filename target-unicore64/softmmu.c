@@ -132,7 +132,7 @@ void do_interrupt(CPUUniCore64State *env)
     env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | ASR_MODE_PRIV;
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */
-    env->cp0.c4_itrapaddr = env->regs[31];
+    env->cp0.c4_epc = env->regs[31];
     env->regs[31] = addr;
     env->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
@@ -208,13 +208,13 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
 
 do_fault:
     if (code) {
-        env->cp0.c4_itrapaddr = address;
+        env->cp0.c4_epc = address;
         if (access_type == 2) {
             env->cp0.c3_ifaultstatus = code;
             env->exception_index = UC64_EXCP_ITRAP;
         } else {
             env->cp0.c3_dfaultstatus = code;
-            env->cp0.c4_faultaddr = address;
+            env->cp0.c4_dtrapaddr = address;
             env->exception_index = UC64_EXCP_DTRAP;
         }
     }

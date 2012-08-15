@@ -263,9 +263,9 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
     case 4:
         switch (cop) {
         case 0:
-            return env->cp0.c4_faultaddr;
+            return env->cp0.c4_dtrapaddr;
         case 1:
-            return env->cp0.c4_itrapaddr;
+            return env->cp0.c4_epc;
         }
         break;
     case 8:
