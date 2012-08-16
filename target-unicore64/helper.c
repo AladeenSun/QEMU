@@ -375,6 +375,14 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
             goto unrecognized;
         }
         break;
+    case 9:
+        switch (cop) {
+        case 0:
+            env->cp0.c9_excpbase = val;
+        default:
+            goto unrecognized;
+        }
+        break;
     case 12:
         if (cop < 8) {
             env->cp0.c12_sysu[cop] = val;
