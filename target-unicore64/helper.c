@@ -379,6 +379,7 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
         switch (cop) {
         case 0:
             env->cp0.c9_excpbase = val;
+            break;
         default:
             goto unrecognized;
         }
