@@ -47,11 +47,11 @@ static void do_ucf64_trans(CPUUniCore64State *env, DisasContext *s,
 
     if ((insn & 0xfde0ffff) == 0xc4400000) { /* insn CFF CTF */
         if (UCOP_SET(25)) { /* CFF */
-            gen_helper_ucf64_get_fpscr(tmp, cpu_env);
+            gen_helper_ucf64_get_fpsr(tmp, cpu_env);
             tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp);
         } else { /* CTF */
             tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_D]);
-            gen_helper_ucf64_set_fpscr(cpu_env, tmp);
+            gen_helper_ucf64_set_fpsr(cpu_env, tmp);
         }
         return;
     }

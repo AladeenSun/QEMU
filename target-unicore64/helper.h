@@ -32,8 +32,8 @@ DEF_HELPER_2(sbc_cc_i64, i64, i64, i64)
 DEF_HELPER_2(adc_cc_i32, i32, i32, i32)
 DEF_HELPER_2(adc_cc_i64, i64, i64, i64)
 
-DEF_HELPER_1(ucf64_get_fpscr, i64, env)
-DEF_HELPER_2(ucf64_set_fpscr, void, env, i64)
+DEF_HELPER_1(ucf64_get_fpsr, i64, env)
+DEF_HELPER_2(ucf64_set_fpsr, void, env, i64)
 
 DEF_HELPER_3(ucf64_adds, f32, f32, f32, env)
 DEF_HELPER_3(ucf64_addd, f64, f64, f64, env)

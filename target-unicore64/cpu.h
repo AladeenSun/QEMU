@@ -73,8 +73,9 @@ typedef struct CPUUniCore64State {
     /* UniCore-F64 coprocessor state.  */
     struct {
         float64 regs[16];
-        uint64_t xregs[32];
-        float_status fp_status;
+        uint64_t fpsr; /* float point status reg */
+        uint64_t fpcr; /* float point control reg */
+        float_status qemu_fp_status; /* QEMU emulator float status */
     } ucf64;
 
     CPU_COMMON

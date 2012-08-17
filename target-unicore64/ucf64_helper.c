@@ -11,24 +11,23 @@
 #include "cpu.h"
 #include "helper.h"
 
-/* UniCore-F64 system registers.  */
-#define UC64_UCF64_FPSCR                (31)
-#define UCF64_FPSCR_MASK                (0x7ffffff)
-#define UCF64_FPSCR_RND_MASK            (0x7)
-#define UCF64_FPSCR_RND(r)              (((r) >>  0) & UCF64_FPSCR_RND_MASK)
-#define UCF64_FPSCR_TRAPEN_MASK         (0x7f)
-#define UCF64_FPSCR_TRAPEN(r)           (((r) >> 10) & UCF64_FPSCR_TRAPEN_MASK)
-#define UCF64_FPSCR_FLAG_MASK           (0x1ff)
-#define UCF64_FPSCR_FLAG(r)             (((r) >> 17) & UCF64_FPSCR_FLAG_MASK)
-#define UCF64_FPSCR_FLAG_ZERO           (1 << 17)
-#define UCF64_FPSCR_FLAG_INFINITY       (1 << 18)
-#define UCF64_FPSCR_FLAG_INVALID        (1 << 19)
-#define UCF64_FPSCR_FLAG_UNDERFLOW      (1 << 20)
-#define UCF64_FPSCR_FLAG_OVERFLOW       (1 << 21)
-#define UCF64_FPSCR_FLAG_INEXACT        (1 << 22)
-#define UCF64_FPSCR_FLAG_HUGEINT        (1 << 23)
-#define UCF64_FPSCR_FLAG_DENORMAL       (1 << 24)
-#define UCF64_FPSCR_FLAG_DIVZERO        (1 << 25)
+/* UniCore-F64 status register.  */
+#define UCF64_FPSR_MASK                (0xfffffff)
+#define UCF64_FPSR_RND_MASK            (0x7)
+#define UCF64_FPSR_RND(r)              (((r) >>  0) & UCF64_FPSR_RND_MASK)
+#define UCF64_FPSR_TRAPEN_MASK         (0x7f)
+#define UCF64_FPSR_TRAPEN(r)           (((r) >> 10) & UCF64_FPSR_TRAPEN_MASK)
+#define UCF64_FPSR_FLAG_MASK           (0x1ff)
+#define UCF64_FPSR_FLAG(r)             (((r) >> 17) & UCF64_FPSR_FLAG_MASK)
+#define UCF64_FPSR_FLAG_ZERO           (1 << 17)
+#define UCF64_FPSR_FLAG_INFINITY       (1 << 18)
+#define UCF64_FPSR_FLAG_INVALID        (1 << 19)
+#define UCF64_FPSR_FLAG_UNDERFLOW      (1 << 20)
+#define UCF64_FPSR_FLAG_OVERFLOW       (1 << 21)
+#define UCF64_FPSR_FLAG_INEXACT        (1 << 22)
+#define UCF64_FPSR_FLAG_HUGEINT        (1 << 23)
+#define UCF64_FPSR_FLAG_DENORMAL       (1 << 24)
+#define UCF64_FPSR_FLAG_DIVZERO        (1 << 25)
 
 /*
  * The convention used for UniCore-F64 instructions:
@@ -42,32 +41,32 @@ static inline int ucf64_exceptbits_from_host(int host_bits)
     int target_bits = 0;
 
     if (host_bits & float_flag_invalid) {
-        target_bits |= UCF64_FPSCR_FLAG_INVALID;
+        target_bits |= UCF64_FPSR_FLAG_INVALID;
     }
     if (host_bits & float_flag_divbyzero) {
-        target_bits |= UCF64_FPSCR_FLAG_DIVZERO;
+        target_bits |= UCF64_FPSR_FLAG_DIVZERO;
     }
     if (host_bits & float_flag_overflow) {
-        target_bits |= UCF64_FPSCR_FLAG_OVERFLOW;
+        target_bits |= UCF64_FPSR_FLAG_OVERFLOW;
     }
     if (host_bits & float_flag_underflow) {
-        target_bits |= UCF64_FPSCR_FLAG_UNDERFLOW;
+        target_bits |= UCF64_FPSR_FLAG_UNDERFLOW;
     }
     if (host_bits & float_flag_inexact) {
-        target_bits |= UCF64_FPSCR_FLAG_INEXACT;
+        target_bits |= UCF64_FPSR_FLAG_INEXACT;
     }
     return target_bits;
 }
 
-uint64_t HELPER(ucf64_get_fpscr)(CPUUniCore64State *env)
+uint64_t HELPER(ucf64_get_fpsr)(CPUUniCore64State *env)
 {
     int i;
-    uint64_t fpscr;
+    uint64_t fpsr;
 
-    fpscr = (env->ucf64.xregs[UC64_UCF64_FPSCR] & UCF64_FPSCR_MASK);
-    i = get_float_exception_flags(&env->ucf64.fp_status);
-    fpscr |= (uint64_t)ucf64_exceptbits_from_host(i);
-    return fpscr;
+    fpsr = (env->ucf64.fpsr & UCF64_FPSR_MASK);
+    i = get_float_exception_flags(&env->ucf64.qemu_fp_status);
+    fpsr |= (uint64_t)ucf64_exceptbits_from_host(i);
+    return fpsr;
 }
 
 /* Convert ucf64 exception flags to target form.  */
@@ -75,35 +74,35 @@ static inline int ucf64_exceptbits_to_host(int target_bits)
 {
     int host_bits = 0;
 
-    if (target_bits & UCF64_FPSCR_FLAG_INVALID) {
+    if (target_bits & UCF64_FPSR_FLAG_INVALID) {
         host_bits |= float_flag_invalid;
     }
-    if (target_bits & UCF64_FPSCR_FLAG_DIVZERO) {
+    if (target_bits & UCF64_FPSR_FLAG_DIVZERO) {
         host_bits |= float_flag_divbyzero;
     }
-    if (target_bits & UCF64_FPSCR_FLAG_OVERFLOW) {
+    if (target_bits & UCF64_FPSR_FLAG_OVERFLOW) {
         host_bits |= float_flag_overflow;
     }
-    if (target_bits & UCF64_FPSCR_FLAG_UNDERFLOW) {
+    if (target_bits & UCF64_FPSR_FLAG_UNDERFLOW) {
         host_bits |= float_flag_underflow;
     }
-    if (target_bits & UCF64_FPSCR_FLAG_INEXACT) {
+    if (target_bits & UCF64_FPSR_FLAG_INEXACT) {
         host_bits |= float_flag_inexact;
     }
     return host_bits;
 }
 
-void HELPER(ucf64_set_fpscr)(CPUUniCore64State *env, uint64_t val)
+void HELPER(ucf64_set_fpsr)(CPUUniCore64State *env, uint64_t val)
 {
     int i;
     uint64_t changed;
 
-    changed = env->ucf64.xregs[UC64_UCF64_FPSCR];
-    env->ucf64.xregs[UC64_UCF64_FPSCR] = (val & UCF64_FPSCR_MASK);
+    changed = env->ucf64.fpsr;
+    env->ucf64.fpsr = (val & UCF64_FPSR_MASK);
 
     changed ^= val;
-    if (changed & (UCF64_FPSCR_RND_MASK)) {
-        i = UCF64_FPSCR_RND(val);
+    if (changed & (UCF64_FPSR_RND_MASK)) {
+        i = UCF64_FPSR_RND(val);
         switch (i) {
         case 0:
             i = float_round_nearest_even;
@@ -120,51 +119,51 @@ void HELPER(ucf64_set_fpscr)(CPUUniCore64State *env, uint64_t val)
         default: /* 100 and 101 not implement */
             cpu_abort(env, "Unsupported UniCore64-F64 round mode");
         }
-        set_float_rounding_mode(i, &env->ucf64.fp_status);
+        set_float_rounding_mode(i, &env->ucf64.qemu_fp_status);
     }
 
-    i = ucf64_exceptbits_to_host(UCF64_FPSCR_TRAPEN(val));
-    set_float_exception_flags(i, &env->ucf64.fp_status);
+    i = ucf64_exceptbits_to_host(UCF64_FPSR_TRAPEN(val));
+    set_float_exception_flags(i, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_adds)(float32 a, float32 b, CPUUniCore64State *env)
 {
-    return float32_add(a, b, &env->ucf64.fp_status);
+    return float32_add(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float64 HELPER(ucf64_addd)(float64 a, float64 b, CPUUniCore64State *env)
 {
-    return float64_add(a, b, &env->ucf64.fp_status);
+    return float64_add(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_subs)(float32 a, float32 b, CPUUniCore64State *env)
 {
-    return float32_sub(a, b, &env->ucf64.fp_status);
+    return float32_sub(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float64 HELPER(ucf64_subd)(float64 a, float64 b, CPUUniCore64State *env)
 {
-    return float64_sub(a, b, &env->ucf64.fp_status);
+    return float64_sub(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_muls)(float32 a, float32 b, CPUUniCore64State *env)
 {
-    return float32_mul(a, b, &env->ucf64.fp_status);
+    return float32_mul(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float64 HELPER(ucf64_muld)(float64 a, float64 b, CPUUniCore64State *env)
 {
-    return float64_mul(a, b, &env->ucf64.fp_status);
+    return float64_mul(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_divs)(float32 a, float32 b, CPUUniCore64State *env)
 {
-    return float32_div(a, b, &env->ucf64.fp_status);
+    return float32_div(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float64 HELPER(ucf64_divd)(float64 a, float64 b, CPUUniCore64State *env)
 {
-    return float64_div(a, b, &env->ucf64.fp_status);
+    return float64_div(a, b, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_negs)(float32 a)
@@ -235,32 +234,32 @@ static inline uint64_t ucf64_dtoi(float64 d)
 /* Integer to float conversion.  */
 float32 HELPER(ucf64_si2sf)(float32 x, CPUUniCore64State *env)
 {
-    return int32_to_float32(ucf64_stoi(x), &env->ucf64.fp_status);
+    return int32_to_float32(ucf64_stoi(x), &env->ucf64.qemu_fp_status);
 }
 
 float64 HELPER(ucf64_si2df)(float32 x, CPUUniCore64State *env)
 {
-    return int32_to_float64(ucf64_stoi(x), &env->ucf64.fp_status);
+    return int32_to_float64(ucf64_stoi(x), &env->ucf64.qemu_fp_status);
 }
 
 /* Float to integer conversion.  */
 float32 HELPER(ucf64_sf2si)(float32 x, CPUUniCore64State *env)
 {
-    return ucf64_itos(float32_to_int32(x, &env->ucf64.fp_status));
+    return ucf64_itos(float32_to_int32(x, &env->ucf64.qemu_fp_status));
 }
 
 float32 HELPER(ucf64_df2si)(float64 x, CPUUniCore64State *env)
 {
-    return ucf64_itos(float64_to_int32(x, &env->ucf64.fp_status));
+    return ucf64_itos(float64_to_int32(x, &env->ucf64.qemu_fp_status));
 }
 
 /* floating point conversion */
 float64 HELPER(ucf64_sf2df)(float32 x, CPUUniCore64State *env)
 {
-    return float32_to_float64(x, &env->ucf64.fp_status);
+    return float32_to_float64(x, &env->ucf64.qemu_fp_status);
 }
 
 float32 HELPER(ucf64_df2sf)(float64 x, CPUUniCore64State *env)
 {
-    return float64_to_float32(x, &env->ucf64.fp_status);
+    return float64_to_float32(x, &env->ucf64.qemu_fp_status);
 }
