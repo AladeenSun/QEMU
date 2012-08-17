@@ -19,7 +19,7 @@
 #define DEBUG_UC64
 
 #ifdef DEBUG_UC64
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
+#define DPRINTF(fmt, ...) printf("\t\t%s: " fmt , __func__, ## __VA_ARGS__)
 #else
 #define DPRINTF(fmt, ...) do {} while (0)
 #endif
@@ -196,7 +196,7 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
 
 do_fault:
     if (code) {
-        DPRINTF("\tva %" PRIx64 " desc %" PRIx64 " code %d is_user %d\n",
+        DPRINTF("va %" PRIx64 " desc %" PRIx64 " code %d is_user %d\n",
                     address, desc, code, is_user);
         env->cp0.c4_epc = address;
         if (access_type == 2) {
@@ -238,8 +238,10 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
                             &prot, &page_size);
         }
         if ((address & 0xfffffff000000000) != 0xfffffff000000000) {
-            DPRINTF("\tva %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
+            if ((address & 0xffffffff00000000) != 0xf00000000) {
+                DPRINTF("va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
                     address, phys_addr, env->regs[31]);
+            }
         }
     }
 
