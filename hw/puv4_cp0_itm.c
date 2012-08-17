@@ -11,7 +11,7 @@
 #include "sysbus.h"
 #include "ptimer.h"
 
-#define DEBUG_PUV4
+#undef DEBUG_PUV4
 #include "puv4.h"
 
 /* puv4 ostimer implementation. */
