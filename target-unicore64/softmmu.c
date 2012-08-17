@@ -203,6 +203,8 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
 
 do_fault:
     if (code) {
+        DPRINTF("%s: va %" PRIx64 " desc %" PRIx64 " code %d is_user %d\n",
+                    __func__, address, desc, code, is_user);
         env->cp0.c4_epc = address;
         if (access_type == 2) {
             env->cp0.c3_ifaultstatus = code;
