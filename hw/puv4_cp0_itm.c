@@ -110,7 +110,6 @@ static int uc64_cp0_itm_init(SysBusDevice *dev)
 {
     UC64CP0State *s = FROM_SYSBUS(UC64CP0State, dev);
 
-    DPRINTF("%s\n", __func__);
     s->reg_ITIMERCR = 0;
     s->reg_ITIMERMR = 0;
 

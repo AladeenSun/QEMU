@@ -93,7 +93,6 @@ static int uc64_cp0_intc_init(SysBusDevice *dev)
 {
     UC64CP0State *s = FROM_SYSBUS(UC64CP0State, dev);
 
-    DPRINTF("%s\n", __func__);
     /* Why not 6 times */
     qdev_init_gpio_in(&s->busdev.qdev, uc64_cp0_intc_handler, 6);
     sysbus_init_irq(&s->busdev, &s->parent_irq);
