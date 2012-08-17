@@ -16,7 +16,7 @@
 #error This file only exist under softmmu circumstance
 #endif
 
-#undef DEBUG_UC64
+#define DEBUG_UC64
 
 #ifdef DEBUG_UC64
 #define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
@@ -43,14 +43,6 @@
 
 #define SHIFT 3
 #include "softmmu_template.h"
-
-#undef DEBUG_UC64
-
-#ifdef DEBUG_UC64
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
-#else
-#define DPRINTF(fmt, ...) do {} while (0)
-#endif
 
 void tlb_fill(CPUUniCore64State *env1, target_ulong addr, int is_write,
         int mmu_idx, uintptr_t retaddr)
@@ -113,14 +105,17 @@ void do_interrupt(CPUUniCore64State *env)
         addr = UC64_EXCP_PRIV;
         break;
     case UC64_EXCP_ITRAP:
-        DPRINTF("itrap happend at %x\n", env->regs[31]);
+        DPRINTF("itrap happend at %" PRIx64 "\n", env->regs[31]);
         addr = UC64_EXCP_ITRAP;
         break;
     case UC64_EXCP_DTRAP:
-        DPRINTF("dtrap happend at %x\n", env->regs[31]);
+        DPRINTF("dtrap happend at %" PRIx64 "\n", env->regs[31]);
         addr = UC64_EXCP_DTRAP;
         break;
     case UC64_INTR_ITIMER:
+        DPRINTF("itimer happend at %" PRIx64 "\n", env->regs[31]);
+        addr = UC64_INTR_ITIMER;
+        break;
     default:
         cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
         return;
