@@ -1357,7 +1357,6 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     gen_icount_start();
     do {
         UNHANDLED_FLOW(unlikely(!QTAILQ_EMPTY(&env->breakpoints)));
-        UNHANDLED_FLOW(tb->cflags & CF_LAST_IO);
 
         if (search_pc) {
             j = gen_opc_ptr - gen_opc_buf;
@@ -1370,6 +1369,10 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
             gen_opc_pc[lj] = dc->dc_pc;
             gen_opc_instr_start[lj] = 1;
             gen_opc_icount[lj] = num_insns;
+        }
+
+        if (num_insns + 1 == max_insns && (tb->cflags & CF_LAST_IO)) {
+            gen_io_start();
         }
 
         disas_uc64_insn(env, dc);
@@ -1405,6 +1408,14 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     } while (dc->dc_jmp == DISAS_NEXT);
 
 done_disas_loop:
+    if (tb->cflags & CF_LAST_IO) {
+        if (dc->dc_condinsn) {
+            /* FIXME: This can theoretically happen with self-modifying code */
+            cpu_abort(env, "IO on conditional branch instruction");
+        }
+        gen_io_end();
+    }
+
     if (unlikely(env->singlestep_enabled)) {
         UNHANDLED_FLOW(true);
     } else {
