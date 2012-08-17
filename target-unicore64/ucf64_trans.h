@@ -9,6 +9,10 @@
  * later version. See the COPYING file in the top-level directory.
  */
 
+/* FIXME:  These should be removed.  */
+static TCGv_i32 cpu_F0s, cpu_F1s;
+static TCGv_i64 cpu_F0d, cpu_F1d;
+
 #define UCOP_UCF64_FMT          (((insn) >> 25) & 0x03)
 
 static inline long ucf64_reg_offset(int reg)
@@ -314,4 +318,3 @@ static void do_ucf64(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         break;
     }
 }
-

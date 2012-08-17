@@ -23,10 +23,6 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
-/* FIXME:  These should be removed.  */
-TCGv_i32 cpu_F0s, cpu_F1s;
-TCGv_i64 cpu_F0d, cpu_F1d;
-
 static TCGv_ptr cpu_env;
 static TCGv_i64 cpu_R[32];
 
