@@ -126,6 +126,16 @@ void HELPER(ucf64_set_fpsr)(CPUUniCore64State *env, uint64_t val)
     set_float_exception_flags(i, &env->ucf64.qemu_fp_status);
 }
 
+void HELPER(ucf64_set_fpcr)(CPUUniCore64State *env, uint64_t val)
+{
+    env->ucf64.fpcr = val;
+}
+
+uint64_t HELPER(ucf64_get_fpcr)(CPUUniCore64State *env)
+{
+    return env->ucf64.fpcr;
+}
+
 float32 HELPER(ucf64_adds)(float32 a, float32 b, CPUUniCore64State *env)
 {
     return float32_add(a, b, &env->ucf64.qemu_fp_status);

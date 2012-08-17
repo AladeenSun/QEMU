@@ -31,10 +31,9 @@ static void do_ucf64_trans(CPUUniCore64State *env, DisasContext *s,
 {
     TCGv_i64 tmp;
 
-    ILLEGAL_INSN(UCOP_REG_D == 31);
-
     tmp = tcg_temp_new_i64();
     if ((insn & 0xfde007ff) == 0xc0400000) { /* insn MFF MTF */
+        ILLEGAL_INSN(UCOP_REG_D == 31);
         if (UCOP_SET(25)) { /* MFF */
             tcg_gen_ld_i64(tmp, cpu_env, ucf64_reg_offset(UCOP_REG_S1));
             tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp);
@@ -47,11 +46,21 @@ static void do_ucf64_trans(CPUUniCore64State *env, DisasContext *s,
 
     if ((insn & 0xfde0ffff) == 0xc4400000) { /* insn CFF CTF */
         if (UCOP_SET(25)) { /* CFF */
-            gen_helper_ucf64_get_fpsr(tmp, cpu_env);
-            tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp);
+            if (UCOP_REG_D != 31) {
+                gen_helper_ucf64_get_fpsr(tmp, cpu_env);
+                tcg_gen_mov_i64(cpu_R[UCOP_REG_D], tmp);
+            } else { /* FLAG = FPU.FLAG*/
+                gen_helper_ucf64_get_fpcr(tmp, cpu_env);
+                gen_helper_afr_write(tmp);
+            }
         } else { /* CTF */
-            tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_D]);
-            gen_helper_ucf64_set_fpsr(cpu_env, tmp);
+            if (UCOP_REG_D != 31) {
+                tcg_gen_mov_i64(tmp, cpu_R[UCOP_REG_D]);
+                gen_helper_ucf64_set_fpsr(cpu_env, tmp);
+            } else { /* FPU.FLAG = FLAG */
+                gen_helper_afr_read(tmp);
+                gen_helper_ucf64_set_fpcr(cpu_env, tmp);
+            }
         }
         return;
     }
