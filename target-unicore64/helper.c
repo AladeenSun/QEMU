@@ -333,6 +333,18 @@ void helper_cp0_set(CPUUniCore64State *env, uint64_t val, uint64_t creg,
         }
         env->cp0.c2_base = val;
         break;
+    case 4:
+        switch (cop) {
+        case 0:
+            env->cp0.c4_dtrapaddr = val;
+            break;
+        case 1:
+            env->cp0.c4_epc = val;
+            break;
+        default:
+            goto unrecognized;
+        }
+        break;
     case 5:
         switch (cop) {
         case 0x18:
