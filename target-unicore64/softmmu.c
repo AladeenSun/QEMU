@@ -89,30 +89,16 @@ void switch_mode(CPUUniCore64State *env, int mode)
 
 void do_interrupt(CPUUniCore64State *env)
 {
-    uint64_t addr;
-
     switch (env->exception_index) {
-    case UC64_EXCP_PRIV:
-        addr = UC64_EXCP_PRIV;
-        break;
     case UC64_EXCP_ITRAP:
-        DPRINTF("itrap happend at %" PRIx64 "\n", env->regs[31]);
-        addr = UC64_EXCP_ITRAP;
-        break;
     case UC64_EXCP_DTRAP:
-        DPRINTF("dtrap happend at %" PRIx64 "\n", env->regs[31]);
-        addr = UC64_EXCP_DTRAP;
-        break;
     case UC64_INTR_ITIMER:
-        DPRINTF("itimer happend at %" PRIx64 "\n", env->regs[31]);
-        addr = UC64_INTR_ITIMER;
         break;
+    case UC64_EXCP_PRIV:
     default:
         cpu_abort(env, "Unhandled exception 0x%x\n", env->exception_index);
         return;
     }
-    /* Get exception virtual base address, only least 39 bits available */
-    addr += (env->cp0.c9_excpbase);
 
     switch_mode(env, ASR_MODE_PRIV);
     env->bsr = env->uncached_asr;
@@ -121,7 +107,7 @@ void do_interrupt(CPUUniCore64State *env)
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */
     env->cp0.c4_epc = env->regs[31];
-    env->regs[31] = addr;
+    env->regs[31] = env->cp0.c9_excpbase + env->exception_index;
     env->interrupt_request |= CPU_INTERRUPT_EXITTB;
 }
 
@@ -237,11 +223,15 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
             ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
                             &prot, &page_size);
         }
+        /* Following printf is only used for debug */
         if ((address & 0xfffffff000000000) != 0xfffffff000000000) {
-            if ((address & 0xffffffff00000000) != 0xf00000000) {
-                DPRINTF("va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
+        if ((address & 0xffffffff00000000) != 0xf00000000) {
+        if (((address & 0xfffffffffff00000) < 0x400000) ||
+            ((address & 0xfffffffffff00000) > 0x900000)) {
+            DPRINTF("va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
                     address, phys_addr, env->regs[31]);
-            }
+        }
+        }
         }
     }
 
