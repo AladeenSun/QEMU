@@ -12,6 +12,36 @@
 #define KERNEL_LOAD_ADDR        0x03000000
 #define KERNEL_MAX_SIZE         0x00800000 /* Just a guess */
 
+static void uc64_intc_cpu_handler(void *opaque, int irq, int level)
+{
+    CPUUniCore64State *env = opaque;
+
+    assert(irq == 0);
+    if (level) {
+        cpu_interrupt(env, CPU_INTERRUPT_HARD);
+    } else {
+        cpu_reset_interrupt(env, CPU_INTERRUPT_HARD);
+    }
+}
+
+static void uc64_intc_cpu_init(CPUUniCore64State *env)
+{
+    qemu_irq *cpu_intc, irqs[6];
+    DeviceState *dev;
+    int i;
+
+    /* Initialize interrupt controller */
+    cpu_intc = qemu_allocate_irqs(uc64_intc_cpu_handler, env, 1);
+    dev = sysbus_create_varargs("uc64_intc", UC64_CP0_INTC_BASE,
+            *cpu_intc, *(cpu_intc + 1), *(cpu_intc + 2),
+            *(cpu_intc + 3), *(cpu_intc + 4), *(cpu_intc + 5));
+    for (i = 0; i < 6; i++) {
+        irqs[i] = qdev_get_gpio_in(dev, i);
+    }
+
+    sysbus_create_simple("uc64_itm", UC64_CP0_ITM_BASE, irqs[UC64_INTR_ITM]);
+}
+
 static void puv4_board_init(CPUUniCore64State *env, ram_addr_t ram_size)
 {
     MemoryRegion *ram_memory = g_new(MemoryRegion, 1);
@@ -58,6 +88,7 @@ static void puv4_init(ram_addr_t ram_size, const char *boot_device,
         hw_error("Unable to find CPU definition\n");
     }
 
+    uc64_intc_cpu_init(env);
     puv4_board_init(env, ram_size);
     puv4_load_kernel(kernel_filename);
 }

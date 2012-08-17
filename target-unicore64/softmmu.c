@@ -232,8 +232,20 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
         page_size = TARGET_PAGE_SIZE;
         ret = 0;
     } else {
-        ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
+        if ((address & 0xffffffff00000000) == 0xf00000000) {
+            /* IO memory */
+            phys_addr = address;
+            prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
+            page_size = TARGET_PAGE_SIZE;
+            ret = 0;
+        } else {
+            ret = get_phys_addr(env, address, access_type, is_user, &phys_addr,
                             &prot, &page_size);
+        }
+        if ((address & 0xfffffff000000000) != 0xfffffff000000000) {
+            DPRINTF("%s: va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
+                    __func__, address, phys_addr, env->regs[31]);
+        }
     }
 
     if (ret == 0) {

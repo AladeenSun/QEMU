@@ -99,6 +99,15 @@ typedef struct DisasContext {
 #define gen_store_cpu_field(t_op_64, name)               \
     tcg_gen_st_i64(t_op_64, cpu_env, offsetof(CPUUniCore64State, name))
 
+static inline void gen_write_fakeicmr(TCGv_i64 t_flag_64)
+{
+    TCGv_i64 t_addr_64 = tcg_temp_new_i64();
+
+    tcg_gen_movi_i64(t_addr_64, 0xf10000010);
+    tcg_gen_qemu_st64(t_flag_64, t_addr_64, 1);
+    tcg_temp_free_i64(t_addr_64);
+}
+
 /* Set flags from result.  */
 static inline void gen_flags_logic(TCGv_i64 var_rd)
 {
@@ -756,6 +765,7 @@ static void do_srfr(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
             break;
         case 1: /* !F &&  C : asr */
             gen_helper_asr_write(t_flag_64);
+            gen_write_fakeicmr(t_flag_64);
             break;
         case 2: /*  F && !C : bfr */
             gen_store_cpu_field(t_flag_64, bfr);
@@ -1162,6 +1172,7 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
                 gen_load_cpu_field(cpu_R[31], cp0.c4_epc);
                 gen_load_cpu_field(tmp, bsr);
                 gen_helper_asr_write(tmp);
+                gen_write_fakeicmr(tmp);
                 gen_load_cpu_field(tmp, bfr);
                 gen_helper_afr_write(tmp);
                 tcg_temp_free_i64(tmp);
@@ -1196,15 +1207,25 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 
         t_creg_64 = tcg_temp_new_i64();
         t_cop_64 = tcg_temp_new_i64();
-        tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
         tcg_gen_movi_i64(t_cop_64, UCOP_IMM_9);
         if (UCOP_SET(25)) { /* load */
-            gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
+            tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
+            if (UCOP_REG_S1 == 10) { /* Special handler for creg10 */
+                tcg_gen_movi_i64(t_cop_64, 0xf20000000 | (UCOP_IMM_9 << 4));
+                tcg_gen_qemu_ld64(t_creg_64, t_cop_64, 1);
+            } else {
+                gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
+            }
             tcg_gen_mov_i64(cpu_R[UCOP_REG_D], t_creg_64);
         } else { /* store */
             tcg_gen_movi_i64(t_creg_64, UCOP_REG_D);
-            gen_helper_cp0_set(cpu_env, cpu_R[UCOP_REG_S1],
-                               t_creg_64, t_cop_64);
+            if (UCOP_REG_D == 10) { /* Special handler for creg10 */
+                tcg_gen_movi_i64(t_cop_64, 0xf20000000 | (UCOP_IMM_9 << 4));
+                tcg_gen_qemu_st64(cpu_R[UCOP_REG_S1], t_cop_64, 1);
+            } else {
+                gen_helper_cp0_set(cpu_env, cpu_R[UCOP_REG_S1], t_creg_64,
+                        t_cop_64);
+            }
         }
         tcg_temp_free(t_creg_64);
         tcg_temp_free(t_cop_64);
@@ -1489,6 +1510,8 @@ void cpu_dump_state(CPUUniCore64State *env, FILE *f,
     cpu_fprintf(f, " NF=%16" PRIx64 "  ZF=%16" PRIx64
             "  CF=%16" PRIx64 "  VF=%16" PRIx64 "\n",
             env->NF, env->ZF, env->CF, env->VF);
+    cpu_fprintf(f, "ASR=%16" PRIx64 " BSR=%16" PRIx64 "\n",
+            env->uncached_asr, env->bsr);
 }
 
 void restore_state_to_opc(CPUUniCore64State *env, TranslationBlock *tb,
