@@ -57,4 +57,6 @@ DEF_HELPER_2(ucf64_si2df, f64, f32, env)
 DEF_HELPER_2(ucf64_sf2si, f32, f32, env)
 DEF_HELPER_2(ucf64_df2si, f32, f64, env)
 
+DEF_HELPER_4(ucf64_cmps, void, f32, f32, i32, env)
+DEF_HELPER_4(ucf64_cmpd, void, f64, f64, i32, env)
 #include "def-helper.h"

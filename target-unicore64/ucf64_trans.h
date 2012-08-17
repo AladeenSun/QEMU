@@ -123,8 +123,21 @@ static void do_ucf64_fcvt(CPUUniCore64State *env, DisasContext *s,
 static void do_ucf64_fcmp(CPUUniCore64State *env, DisasContext *s,
                           uint32_t insn)
 {
-    /* TODO */
-    ILLEGAL_INSN(true);
+    TCGv_i32 cond;
+
+    ILLEGAL_INSN(UCOP_SET(26));
+
+    tcg_gen_movi_i32(cond, ((insn >> 2) & 0xf));
+
+    if (UCOP_SET(25)) {
+        tcg_gen_ld_i64(cpu_F0d, cpu_env, ucf64_reg_offset(UCOP_REG_S1));
+        tcg_gen_ld_i64(cpu_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
+        gen_helper_ucf64_cmpd(cpu_F0d, cpu_F1d, cond, cpu_env);
+    } else {
+        tcg_gen_ld_i32(cpu_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_S1));
+        tcg_gen_ld_i32(cpu_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
+        gen_helper_ucf64_cmps(cpu_F0s, cpu_F1s, cond, cpu_env);
+    }
 }
 
 #define gen_helper_ucf64_movs(x, y)      do { } while (0)
