@@ -281,11 +281,6 @@ uint64_t helper_cp0_get(CPUUniCore64State *env, uint64_t creg,
             return env->cp0.c9_excpbase;
         }
         break;
-    case 10:
-        if (cop < 11) {
-            return env->cp0.c10_intr[cop];
-        }
-        break;
     case 11:
         switch (cop) {
         case 0:
