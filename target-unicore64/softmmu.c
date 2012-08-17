@@ -126,7 +126,7 @@ void do_interrupt(CPUUniCore64State *env)
         return;
     }
     /* Get exception virtual base address, only least 39 bits available */
-    addr += (env->cp0.c9_excpbase & 0x7fffffffffULL);
+    addr += (env->cp0.c9_excpbase);
 
     switch_mode(env, ASR_MODE_PRIV);
     env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | ASR_MODE_PRIV;
