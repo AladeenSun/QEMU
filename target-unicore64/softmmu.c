@@ -72,24 +72,19 @@ void tlb_fill(CPUUniCore64State *env1, target_ulong addr, int is_write,
 
 void switch_mode(CPUUniCore64State *env, int mode)
 {
-    int old_mode;
     int old_mode_idx;
     int mode_idx;
 
-    old_mode = env->uncached_asr & ASR_MODE_SELECT;
-    old_mode_idx = (old_mode == ASR_MODE_PRIV) ?
+    old_mode_idx = ((env->uncached_asr & ASR_MODE_SELECT) == ASR_MODE_PRIV) ?
                     ASR_IDX_PRIV : ASR_IDX_USER;
-    mode_idx = (mode == ASR_MODE_PRIV) ?
-                    ASR_IDX_PRIV : ASR_IDX_USER;
-    if (mode_idx == old_mode_idx) {
-        return;
+    mode_idx = (mode == ASR_MODE_PRIV) ? ASR_IDX_PRIV : ASR_IDX_USER;
+
+    if (mode_idx != old_mode_idx) {
+        env->banked_r29[old_mode_idx] = env->regs[29];
+        env->banked_r30[old_mode_idx] = env->regs[30];
+        env->regs[29] = env->banked_r29[mode_idx];
+        env->regs[30] = env->banked_r30[mode_idx];
     }
-
-    env->banked_r29[old_mode_idx] = env->regs[29];
-    env->banked_r30[old_mode_idx] = env->regs[30];
-
-    env->regs[29] = env->banked_r29[mode_idx];
-    env->regs[30] = env->banked_r30[mode_idx];
 }
 
 void do_interrupt(CPUUniCore64State *env)
