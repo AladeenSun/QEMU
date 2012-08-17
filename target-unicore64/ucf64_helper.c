@@ -241,7 +241,7 @@ void HELPER(ucf64_cmps)(float32 a, float32 b, uint32_t c,
         }
         break;
     }
-    env->ucf64.fpsr = (env->CF << 29) | (env->ucf64.fpsr & 0x0fffffff);
+    env->ucf64.fpcr = (env->CF << 1) | (env->ucf64.fpcr & 0xf);
 }
 
 void HELPER(ucf64_cmpd)(float64 a, float64 b, uint32_t c,
