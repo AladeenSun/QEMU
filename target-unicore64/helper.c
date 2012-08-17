@@ -84,8 +84,7 @@ void HELPER(afr_write)(uint64_t x)
 
 uint64_t HELPER(afr_read)(void)
 {
-    return (((env->NF >> 63) << 3) | ((env->ZF == 0) << 2) |
-        (env->CF << 1) | (env->VF >> 63));
+    return AFR_READ(env);
 }
 
 uint64_t HELPER(asr_read)(void)

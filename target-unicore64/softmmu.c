@@ -87,13 +87,9 @@ void switch_mode(CPUUniCore64State *env, int mode)
 
     env->banked_r29[old_mode_idx] = env->regs[29];
     env->banked_r30[old_mode_idx] = env->regs[30];
-    env->banked_bsr[old_mode_idx] = env->uncached_asr;
-    env->banked_bfr[old_mode_idx] = env->uncached_afr;
 
     env->regs[29] = env->banked_r29[mode_idx];
     env->regs[30] = env->banked_r30[mode_idx];
-    env->uncached_asr = env->banked_bsr[mode_idx];
-    env->uncached_afr = env->banked_bfr[mode_idx];
 }
 
 void do_interrupt(CPUUniCore64State *env)
@@ -124,6 +120,8 @@ void do_interrupt(CPUUniCore64State *env)
     addr += (env->cp0.c9_excpbase);
 
     switch_mode(env, ASR_MODE_PRIV);
+    env->bsr = env->uncached_asr;
+    env->bfr = AFR_READ(env);
     env->uncached_asr = (env->uncached_asr & ~ASR_MODE_SELECT) | ASR_MODE_PRIV;
     env->uncached_asr |= ASR_INTR_SELECT;
     /* the PC already points to the proper instruction. */

@@ -42,8 +42,6 @@ typedef struct CPUUniCore64State {
     /* Banked registers. */
     uint64_t banked_r29[3];
     uint64_t banked_r30[3];
-    uint64_t banked_bsr[3];
-    uint64_t banked_bfr[3];
 
     /* AFR cache for faster execution */
     uint64_t VF; /* V is the bit 31. All other bits are undefined */
@@ -94,6 +92,9 @@ typedef struct CPUUniCore64State {
 #define AFR_C                   (1 << 1)
 #define AFR_Z                   (1 << 2)
 #define AFR_N                   (1 << 3)
+
+#define AFR_READ(env)   (((env->NF >> 63) << 3) | ((env->ZF == 0) << 2) | \
+                        (env->CF << 1) | (env->VF >> 63))
 
 #define UC64_EXCP_PRIV          0x08
 #define UC64_EXCP_ITRAP         0x0c
