@@ -71,6 +71,13 @@ typedef struct CPUUniCore64State {
         uint64_t c12_sysu[8]; /* SysU registers. */
     } cp0;
 
+    /* UniCore-F64 coprocessor state.  */
+    struct {
+        float64 regs[16];
+        uint64_t xregs[32];
+        float_status fp_status;
+    } ucf64;
+
     CPU_COMMON
 
 } CPUUniCore64State;

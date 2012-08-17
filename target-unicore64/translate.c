@@ -23,6 +23,10 @@
 #define GEN_HELPER 1
 #include "helper.h"
 
+/* FIXME:  These should be removed.  */
+TCGv_i32 cpu_F0s, cpu_F1s;
+TCGv_i64 cpu_F0d, cpu_F1d;
+
 static TCGv_ptr cpu_env;
 static TCGv_i64 cpu_R[32];
 
@@ -1196,6 +1200,8 @@ static void do_branch(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
     }
 }
 
+#include "ucf64_trans.h"
+
 static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
 {
     TCGv_i64 t_creg_64, t_cop_64;
@@ -1251,6 +1257,9 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         default:
             ILLEGAL_INSN(true);
         }
+        break;
+    case 2: /* floating point insn */
+        do_ucf64(env, s, insn);
         break;
     default:
         ILLEGAL_INSN(true);

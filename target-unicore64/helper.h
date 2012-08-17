@@ -32,4 +32,29 @@ DEF_HELPER_2(sbc_cc_i64, i64, i64, i64)
 DEF_HELPER_2(adc_cc_i32, i32, i32, i32)
 DEF_HELPER_2(adc_cc_i64, i64, i64, i64)
 
+DEF_HELPER_1(ucf64_get_fpscr, i64, env)
+DEF_HELPER_2(ucf64_set_fpscr, void, env, i64)
+
+DEF_HELPER_3(ucf64_adds, f32, f32, f32, env)
+DEF_HELPER_3(ucf64_addd, f64, f64, f64, env)
+DEF_HELPER_3(ucf64_subs, f32, f32, f32, env)
+DEF_HELPER_3(ucf64_subd, f64, f64, f64, env)
+DEF_HELPER_3(ucf64_muls, f32, f32, f32, env)
+DEF_HELPER_3(ucf64_muld, f64, f64, f64, env)
+DEF_HELPER_3(ucf64_divs, f32, f32, f32, env)
+DEF_HELPER_3(ucf64_divd, f64, f64, f64, env)
+DEF_HELPER_1(ucf64_negs, f32, f32)
+DEF_HELPER_1(ucf64_negd, f64, f64)
+DEF_HELPER_1(ucf64_abss, f32, f32)
+DEF_HELPER_1(ucf64_absd, f64, f64)
+
+DEF_HELPER_2(ucf64_sf2df, f64, f32, env)
+DEF_HELPER_2(ucf64_df2sf, f32, f64, env)
+
+DEF_HELPER_2(ucf64_si2sf, f32, f32, env)
+DEF_HELPER_2(ucf64_si2df, f64, f32, env)
+
+DEF_HELPER_2(ucf64_sf2si, f32, f32, env)
+DEF_HELPER_2(ucf64_df2si, f32, f64, env)
+
 #include "def-helper.h"
