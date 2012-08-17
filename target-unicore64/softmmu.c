@@ -203,8 +203,8 @@ static int get_phys_addr(CPUUniCore64State *env, target_ulong address,
 
 do_fault:
     if (code) {
-        DPRINTF("%s: va %" PRIx64 " desc %" PRIx64 " code %d is_user %d\n",
-                    __func__, address, desc, code, is_user);
+        DPRINTF("\tva %" PRIx64 " desc %" PRIx64 " code %d is_user %d\n",
+                    address, desc, code, is_user);
         env->cp0.c4_epc = address;
         if (access_type == 2) {
             env->cp0.c3_ifaultstatus = code;
@@ -245,8 +245,8 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
                             &prot, &page_size);
         }
         if ((address & 0xfffffff000000000) != 0xfffffff000000000) {
-            DPRINTF("%s: va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
-                    __func__, address, phys_addr, env->regs[31]);
+            DPRINTF("\tva %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
+                    address, phys_addr, env->regs[31]);
         }
     }
 
