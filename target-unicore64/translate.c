@@ -1335,6 +1335,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
 {
     DisasContext dc1, *dc = &dc1;
     target_ulong pc_start;
+    int j, lj;
     int num_insns;
     int max_insns;
 
@@ -1346,6 +1347,7 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     dc->dc_singlestep = env->singlestep_enabled;
     dc->dc_condinsn = false;
 
+    lj = -1;
     num_insns = 0;
     max_insns = tb->cflags & CF_COUNT_MASK;
     if (max_insns == 0) {
@@ -1355,8 +1357,20 @@ static inline void gen_intermediate_code_internal(CPUUniCore64State *env,
     gen_icount_start();
     do {
         UNHANDLED_FLOW(unlikely(!QTAILQ_EMPTY(&env->breakpoints)));
-        UNHANDLED_FLOW(search_pc);
         UNHANDLED_FLOW(tb->cflags & CF_LAST_IO);
+
+        if (search_pc) {
+            j = gen_opc_ptr - gen_opc_buf;
+            if (lj < j) {
+                lj++;
+                while (lj < j) {
+                    gen_opc_instr_start[lj++] = 0;
+                }
+            }
+            gen_opc_pc[lj] = dc->dc_pc;
+            gen_opc_instr_start[lj] = 1;
+            gen_opc_icount[lj] = num_insns;
+        }
 
         disas_uc64_insn(env, dc);
 
@@ -1427,7 +1441,11 @@ done_disas_loop:
     *gen_opc_ptr = INDEX_op_end;
 
     if (search_pc) {
-        UNHANDLED_FLOW(true);
+        j = gen_opc_ptr - gen_opc_buf;
+        lj++;
+        while (lj <= j) {
+            gen_opc_instr_start[lj++] = 0;
+        }
     } else {
         tb->size = dc->dc_pc - pc_start;
         tb->icount = num_insns;
