@@ -286,6 +286,8 @@ static void do_ucf64_datap(CPUUniCore64State *env, DisasContext *s,
             gen_helper_ucf64_movtw(t_F1s, t_F0s, t_cond, cpu_env);
             tcg_gen_st_i32(t_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
+        default:
+            ILLEGAL_INSN(true);
         }
         break;
     default:
