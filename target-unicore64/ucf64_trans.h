@@ -69,10 +69,11 @@ static void do_ucf64_fcvt(CPUUniCore64State *env, DisasContext *s,
                           uint32_t insn)
 {
     TCGv_i32 t_F0s;
-    TCGv_i64 t_F0d;
+    TCGv_i64 t_F0d, t_F1d;
 
     t_F0s = tcg_temp_new_i32();
     t_F0d = tcg_temp_new_i64();
+    t_F1d = tcg_temp_new_i64();
 
     ILLEGAL_INSN(UCOP_UCF64_FMT == 3); /* 26 and 25 bits cannot be 0x3 */
     ILLEGAL_INSN(UCOP_REG_S1); /* UCOP_REG_S1 must be 0 */
@@ -83,12 +84,14 @@ static void do_ucf64_fcvt(CPUUniCore64State *env, DisasContext *s,
         case 1: /* d */
             tcg_gen_ld_i64(t_F0d, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             gen_helper_ucf64_df2sf(t_F0s, t_F0d, cpu_env);
-            tcg_gen_st_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            tcg_gen_extu_i32_i64(t_F1d, t_F0s);
+            tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         case 2: /* w */
             tcg_gen_ld_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             gen_helper_ucf64_si2sf(t_F0s, t_F0s, cpu_env);
-            tcg_gen_st_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            tcg_gen_extu_i32_i64(t_F1d, t_F0s);
+            tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         default: /* undefined */
             ILLEGAL_INSN(true);
@@ -115,12 +118,14 @@ static void do_ucf64_fcvt(CPUUniCore64State *env, DisasContext *s,
         case 0: /* s */
             tcg_gen_ld_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             gen_helper_ucf64_sf2si(t_F0s, t_F0s, cpu_env);
-            tcg_gen_st_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            tcg_gen_extu_i32_i64(t_F1d, t_F0s);
+            tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         case 1: /* d */
             tcg_gen_ld_i64(t_F0d, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             gen_helper_ucf64_df2si(t_F0s, t_F0d, cpu_env);
-            tcg_gen_st_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            tcg_gen_extu_i32_i64(t_F1d, t_F0s);
+            tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         default: /* undefined */
            ILLEGAL_INSN(true);
@@ -131,6 +136,7 @@ static void do_ucf64_fcvt(CPUUniCore64State *env, DisasContext *s,
     }
     tcg_temp_free_i32(t_F0s);
     tcg_temp_free_i64(t_F0d);
+    tcg_temp_free_i64(t_F1d);
 }
 
 static void do_ucf64_fcmp(CPUUniCore64State *env, DisasContext *s,
