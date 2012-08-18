@@ -225,7 +225,7 @@
 #define TARGET_NR_keyctl 219
 #define TARGET_NR_clone 220
 #define TARGET_NR_execve 221
-#define TARGET_NR_mmap2 222
+#define TARGET_NR_mmap 222
 #define TARGET_NR_fadvise64_64 223
 #define TARGET_NR_swapon 224
 #define TARGET_NR_swapoff 225
