@@ -126,14 +126,14 @@ void HELPER(ucf64_set_fpsr)(CPUUniCore64State *env, uint64_t val)
     set_float_exception_flags(i, &env->ucf64.qemu_fp_status);
 }
 
-void HELPER(ucf64_set_fpcr)(CPUUniCore64State *env, uint64_t val)
+void HELPER(ucf64_set_fpfr)(CPUUniCore64State *env, uint64_t val)
 {
-    env->ucf64.fpcr = val;
+    env->ucf64.fpfr = val;
 }
 
-uint64_t HELPER(ucf64_get_fpcr)(CPUUniCore64State *env)
+uint64_t HELPER(ucf64_get_fpfr)(CPUUniCore64State *env)
 {
-    return env->ucf64.fpcr;
+    return env->ucf64.fpfr;
 }
 
 float32 HELPER(ucf64_adds)(float32 a, float32 b, CPUUniCore64State *env)
@@ -199,8 +199,8 @@ float64 HELPER(ucf64_absd)(float64 a)
 void HELPER(ucf64_movts)(float32 a, float32 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
-    if (((env->ucf64.fpcr & 0x2) && cond) ||
-        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+    if (((env->ucf64.fpfr & 0x2) && cond) ||
+        (!(env->ucf64.fpfr & 0x2) && (!cond))) {
         a = b;
     }
 }
@@ -208,8 +208,8 @@ void HELPER(ucf64_movts)(float32 a, float32 b, uint32_t cond,
 void HELPER(ucf64_movtd)(float64 a, float64 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
-    if (((env->ucf64.fpcr & 0x2) && cond) ||
-        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+    if (((env->ucf64.fpfr & 0x2) && cond) ||
+        (!(env->ucf64.fpfr & 0x2) && (!cond))) {
         a = b;
     }
 }
@@ -217,8 +217,8 @@ void HELPER(ucf64_movtd)(float64 a, float64 b, uint32_t cond,
 void HELPER(ucf64_movtw)(float32 a, float32 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
-    if (((env->ucf64.fpcr & 0x2) && cond) ||
-        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+    if (((env->ucf64.fpfr & 0x2) && cond) ||
+        (!(env->ucf64.fpfr & 0x2) && (!cond))) {
         a = b;
     }
 }
@@ -228,43 +228,43 @@ void HELPER(ucf64_cmps)(float32 a, float32 b, uint32_t c,
 {
     int flag;
     flag = float32_compare_quiet(a, b, &env->ucf64.qemu_fp_status);
-    env->ucf64.fpcr &= 0xd;
+    env->ucf64.fpfr &= 0xd;
     switch (c & 0x7) {
     case 0: /* F */
         break;
     case 1: /* UN */
         if (flag == 2) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 2: /* EQ */
         if (flag == 0) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 3: /* UEQ */
         if ((flag == 0) || (flag == 2)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 4: /* OLT */
         if (flag == -1) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 5: /* ULT */
         if ((flag == -1) || (flag == 2)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 6: /* OLE */
         if ((flag == -1) || (flag == 0)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 7: /* ULE */
         if (flag != 1) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     }
@@ -275,43 +275,43 @@ void HELPER(ucf64_cmpd)(float64 a, float64 b, uint32_t c,
 {
     int flag;
     flag = float64_compare_quiet(a, b, &env->ucf64.qemu_fp_status);
-    env->ucf64.fpcr &= 0xd;
+    env->ucf64.fpfr &= 0xd;
     switch (c & 0x7) {
     case 0: /* F */
         break;
     case 1: /* UN */
         if (flag == 2) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 2: /* EQ */
         if (flag == 0) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 3: /* UEQ */
         if ((flag == 0) || (flag == 2)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 4: /* OLT */
         if (flag == -1) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 5: /* ULT */
         if ((flag == -1) || (flag == 2)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 6: /* OLE */
         if ((flag == -1) || (flag == 0)) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     case 7: /* ULE */
         if (flag != 1) {
-            env->ucf64.fpcr |= 0x2;
+            env->ucf64.fpfr |= 0x2;
         }
         break;
     }

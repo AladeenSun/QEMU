@@ -72,7 +72,7 @@ typedef struct CPUUniCore64State {
     struct {
         float64 regs[16];
         uint64_t fpsr; /* float point status reg */
-        uint64_t fpcr; /* float point control reg */
+        uint64_t fpfr; /* float point flag reg */
         float_status qemu_fp_status; /* QEMU emulator float status */
     } ucf64;
 
