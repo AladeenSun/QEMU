@@ -1477,6 +1477,15 @@ done_disas_loop:
     gen_icount_end(tb, num_insns);
     *gen_opc_ptr = INDEX_op_end;
 
+#ifdef DEBUG_DISAS
+    if (qemu_loglevel_mask(CPU_LOG_TB_IN_ASM)) {
+        qemu_log("------------------------------\n");
+        qemu_log("IN: %s\n", lookup_symbol(pc_start));
+        log_target_disas(pc_start, dc->dc_pc - pc_start, 0);
+        qemu_log("------------------------------\n");
+    }
+#endif
+
     if (search_pc) {
         j = gen_opc_ptr - gen_opc_buf;
         lj++;
