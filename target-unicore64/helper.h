@@ -37,9 +37,9 @@ DEF_HELPER_2(ucf64_set_fpsr, void, env, i64)
 DEF_HELPER_1(ucf64_get_fpfr, i64, env)
 DEF_HELPER_2(ucf64_set_fpfr, void, env, i64)
 
-DEF_HELPER_4(ucf64_movts, void, f32, f32, i32, env)
-DEF_HELPER_4(ucf64_movtd, void, f64, f64, i32, env)
-DEF_HELPER_4(ucf64_movtw, void, f32, f32, i32, env)
+DEF_HELPER_4(ucf64_movts, f32, f32, f32, i32, env)
+DEF_HELPER_4(ucf64_movtd, f64, f64, f64, i32, env)
+DEF_HELPER_4(ucf64_movtw, f64, f64, f64, i32, env)
 
 DEF_HELPER_3(ucf64_adds, f32, f32, f32, env)
 DEF_HELPER_3(ucf64_addd, f64, f64, f64, env)

@@ -288,20 +288,20 @@ static void do_ucf64_datap(CPUUniCore64State *env, DisasContext *s,
         case 0 /* s */:
             tcg_gen_ld_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             tcg_gen_ld_i32(t_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
-            gen_helper_ucf64_movts(t_F1s, t_F0s, t_cond, cpu_env);
+            gen_helper_ucf64_movts(t_F1s, t_F1s, t_F0s, t_cond, cpu_env);
             tcg_gen_st_i32(t_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         case 1 /* d */:
             tcg_gen_ld_i64(t_F0d, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
             tcg_gen_ld_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
-            gen_helper_ucf64_movtd(t_F1d, t_F0d, t_cond, cpu_env);
+            gen_helper_ucf64_movtd(t_F1d, t_F1d, t_F0d, t_cond, cpu_env);
             tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         case 2 /* w */:
-            tcg_gen_ld_i32(t_F0s, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
-            tcg_gen_ld_i32(t_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
-            gen_helper_ucf64_movtw(t_F1s, t_F0s, t_cond, cpu_env);
-            tcg_gen_st_i32(t_F1s, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            tcg_gen_ld_i64(t_F0d, cpu_env, ucf64_reg_offset(UCOP_REG_S2));
+            tcg_gen_ld_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
+            gen_helper_ucf64_movtw(t_F1d, t_F1d, t_F0d, t_cond, cpu_env);
+            tcg_gen_st_i64(t_F1d, cpu_env, ucf64_reg_offset(UCOP_REG_D));
             break;
         default:
             ILLEGAL_INSN(true);

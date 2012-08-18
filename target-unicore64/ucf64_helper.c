@@ -196,31 +196,34 @@ float64 HELPER(ucf64_absd)(float64 a)
     return float64_abs(a);
 }
 
-void HELPER(ucf64_movts)(float32 a, float32 b, uint32_t cond,
+float32 HELPER(ucf64_movts)(float32 a, float32 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
     if (((env->ucf64.fpfr & 0x2) && cond) ||
         (!(env->ucf64.fpfr & 0x2) && (!cond))) {
-        a = b;
+        return b;
     }
+    return a;
 }
 
-void HELPER(ucf64_movtd)(float64 a, float64 b, uint32_t cond,
+float64 HELPER(ucf64_movtd)(float64 a, float64 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
     if (((env->ucf64.fpfr & 0x2) && cond) ||
         (!(env->ucf64.fpfr & 0x2) && (!cond))) {
-        a = b;
+        return b;
     }
+    return a;
 }
 
-void HELPER(ucf64_movtw)(float32 a, float32 b, uint32_t cond,
+float64 HELPER(ucf64_movtw)(float64 a, float64 b, uint32_t cond,
                          CPUUniCore64State *env)
 {
     if (((env->ucf64.fpfr & 0x2) && cond) ||
         (!(env->ucf64.fpfr & 0x2) && (!cond))) {
-        a = b;
+        return b;
     }
+    return a;
 }
 
 void HELPER(ucf64_cmps)(float32 a, float32 b, uint32_t c,
