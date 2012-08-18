@@ -141,12 +141,14 @@ static void do_ucf64_fcmp(CPUUniCore64State *env, DisasContext *s,
     TCGv_i32 t_F1s;
     TCGv_i64 t_F1d;
 
+    TCGv_i32 cond;
+
     t_F0s = tcg_temp_new_i32();
     t_F0d = tcg_temp_new_i64();
     t_F1s = tcg_temp_new_i32();
     t_F1d = tcg_temp_new_i64();
 
-    TCGv_i32 cond;
+    cond = tcg_temp_new_i32();
 
     ILLEGAL_INSN(UCOP_SET(26));
 
@@ -165,6 +167,8 @@ static void do_ucf64_fcmp(CPUUniCore64State *env, DisasContext *s,
     tcg_temp_free_i64(t_F0d);
     tcg_temp_free_i32(t_F1s);
     tcg_temp_free_i64(t_F1d);
+
+    tcg_temp_free_i32(cond);
 }
 
 #define UCF64_OP1(name)    do {                           \
