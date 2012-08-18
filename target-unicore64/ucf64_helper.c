@@ -196,6 +196,33 @@ float64 HELPER(ucf64_absd)(float64 a)
     return float64_abs(a);
 }
 
+void HELPER(ucf64_movts)(float32 a, float32 b, uint32_t cond,
+                         CPUUniCore64State *env)
+{
+    if (((env->ucf64.fpcr & 0x2) && cond) ||
+        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+        a = b;
+    }
+}
+
+void HELPER(ucf64_movtd)(float64 a, float64 b, uint32_t cond,
+                         CPUUniCore64State *env)
+{
+    if (((env->ucf64.fpcr & 0x2) && cond) ||
+        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+        a = b;
+    }
+}
+
+void HELPER(ucf64_movtw)(float32 a, float32 b, uint32_t cond,
+                         CPUUniCore64State *env)
+{
+    if (((env->ucf64.fpcr & 0x2) && cond) ||
+        (!(env->ucf64.fpcr & 0x2) && (!cond))) {
+        a = b;
+    }
+}
+
 void HELPER(ucf64_cmps)(float32 a, float32 b, uint32_t c,
         CPUUniCore64State *env)
 {
@@ -289,7 +316,7 @@ void HELPER(ucf64_cmpd)(float64 a, float64 b, uint32_t c,
         }
         break;
     }
-    env->ucf64.fpsr = (env->CF << 29) | (env->ucf64.fpsr & 0x0fffffff);
+    env->ucf64.fpcr = (env->CF << 1) | (env->ucf64.fpcr & 0xf);
 }
 
 /* Helper routines to perform bitwise copies between float and int.  */
