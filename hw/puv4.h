@@ -21,8 +21,8 @@
 
 #define UC64_CP0_INTRTYPE_ITM   (1 << 7)
 
-#define UC64_CP0_INTC_BASE      (0xf10000000) /* FAKE */
-#define UC64_CP0_ITM_BASE       (0xf20000000) /* FAKE */
+#define UC64_CP0_INTC_BASE      (0xf10000000ULL) /* FAKE */
+#define UC64_CP0_ITM_BASE       (0xf20000000ULL) /* FAKE */
 
 extern uint64_t cp0_c10_0_INTR_TYPE;
 

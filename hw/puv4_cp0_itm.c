@@ -75,7 +75,7 @@ static void uc64_cp0_itm_write(void *opaque, target_phys_addr_t offset,
             ptimer_set_count(s->ptimer, s->reg_ITIMERMR - s->reg_ITIMERCR);
         } else {
             ptimer_set_count(s->ptimer, s->reg_ITIMERMR +
-                    (0xffffffffffffffff - s->reg_ITIMERCR));
+                    (0xffffffffffffffffULL - s->reg_ITIMERCR));
         }
         ptimer_run(s->ptimer, 2);
         break;

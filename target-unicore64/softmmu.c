@@ -213,7 +213,7 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
         page_size = TARGET_PAGE_SIZE;
         ret = 0;
     } else {
-        if ((address & 0xffffffff00000000) == 0xf00000000) {
+        if ((address & 0xffffffff00000000ULL) == 0xf00000000ULL) {
             /* IO memory */
             phys_addr = address;
             prot = PAGE_READ | PAGE_WRITE | PAGE_EXEC;
@@ -224,10 +224,10 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
                             &prot, &page_size);
         }
         /* Following printf is only used for debug */
-        if ((address & 0xfffffff000000000) != 0xfffffff000000000) {
-        if ((address & 0xffffffff00000000) != 0xf00000000) {
-        if (((address & 0xfffffffffff00000) < 0x400000) ||
-            ((address & 0xfffffffffff00000) > 0x900000)) {
+        if ((address & 0xfffffff000000000ULL) != 0xfffffff000000000ULL) {
+        if ((address & 0xffffffff00000000ULL) != 0xf00000000ULL) {
+        if (((address & 0xfffffffffff00000ULL) < 0x400000ULL) ||
+            ((address & 0xfffffffffff00000ULL) > 0x900000ULL)) {
             DPRINTF("va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
                     address, phys_addr, env->regs[31]);
         }

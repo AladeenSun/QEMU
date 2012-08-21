@@ -103,7 +103,7 @@ static inline void gen_write_fakeicmr(TCGv_i64 t_flag_64)
 {
     TCGv_i64 t_addr_64 = tcg_temp_new_i64();
 
-    tcg_gen_movi_i64(t_addr_64, 0xf10000010);
+    tcg_gen_movi_i64(t_addr_64, 0xf10000010ULL);
     tcg_gen_qemu_st64(t_flag_64, t_addr_64, 1);
     tcg_temp_free_i64(t_addr_64);
 }
@@ -1213,7 +1213,7 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         if (UCOP_SET(25)) { /* load */
             tcg_gen_movi_i64(t_creg_64, UCOP_REG_S1);
             if (UCOP_REG_S1 == 10) { /* Special handler for creg10 */
-                tcg_gen_movi_i64(t_cop_64, 0xf20000000 | (UCOP_IMM_9 << 4));
+                tcg_gen_movi_i64(t_cop_64, 0xf20000000ULL | (UCOP_IMM_9 << 4));
                 tcg_gen_qemu_ld64(t_creg_64, t_cop_64, 1);
             } else {
                 gen_helper_cp0_get(t_creg_64, cpu_env, t_creg_64, t_cop_64);
@@ -1222,7 +1222,7 @@ static void do_coproc(CPUUniCore64State *env, DisasContext *s, uint32_t insn)
         } else { /* store */
             tcg_gen_movi_i64(t_creg_64, UCOP_REG_D);
             if (UCOP_REG_D == 10) { /* Special handler for creg10 */
-                tcg_gen_movi_i64(t_cop_64, 0xf20000000 | (UCOP_IMM_9 << 4));
+                tcg_gen_movi_i64(t_cop_64, 0xf20000000ULL | (UCOP_IMM_9 << 4));
                 tcg_gen_qemu_st64(cpu_R[UCOP_REG_S1], t_cop_64, 1);
             } else {
                 gen_helper_cp0_set(cpu_env, cpu_R[UCOP_REG_S1], t_creg_64,
