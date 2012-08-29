@@ -11,7 +11,7 @@
 #define DEBUG_UC64
 
 #ifdef DEBUG_UC64
-#define DPRINTF(fmt, ...) printf("%s: " fmt , __func__, ## __VA_ARGS__)
+#define DPRINTF(fmt, ...) printf("\t\t(qemu)%s: " fmt , __func__, ## __VA_ARGS__)
 #else
 #define DPRINTF(fmt, ...) do {} while (0)
 #endif
