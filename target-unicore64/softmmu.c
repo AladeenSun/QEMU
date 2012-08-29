@@ -226,11 +226,8 @@ int uc64_cpu_handle_mmu_fault(CPUUniCore64State *env, target_ulong address,
         /* Following printf is only used for debug */
         if ((address & 0xfffffff000000000ULL) != 0xfffffff000000000ULL) {
         if ((address & 0xffffffff00000000ULL) != 0xf00000000ULL) {
-        if (((address & 0xfffffffffff00000ULL) < 0x400000ULL) ||
-            ((address & 0xfffffffffff00000ULL) > 0x900000ULL)) {
             DPRINTF("va %" PRIx64 " pa %" PRIx64 " pc %" PRIx64 "\n",
                     address, phys_addr, env->regs[31]);
-        }
         }
         }
     }
